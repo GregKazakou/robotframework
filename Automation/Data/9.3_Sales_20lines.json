@@ -1,0 +1,606 @@
+{
+    "IsDelayedCode": 0,
+    "iaprSignPolicy": 2,
+    "InvoiceType": "Delivery note 9.3",
+    "InvoiceTypeCode": "9.3",
+    "DocumentTypeCode": "INVOICE",
+    "Series": "DNv2.0.1",
+    "Number": "000000001",
+    "DateIssued": "2026-04-07T12:51:55",
+    "relativeDocuments": [],
+    "correlatedInvoices": [],
+    "multipleConnectedMarks": [],
+    "deliveryNoteMarks": [],
+    "isReverseDeliveryNote": false,
+    "isDeliveryNote": false,
+    "isFuelInvoice": false,
+    "Issuer": {
+        "RegisteredName": "issuer's name",
+        "contactPerson": "Issuer Contact Person",
+        "Vat": "EL154697391",
+        "TaxOffice": "issuer's Tax Office",
+        "Phones": [
+            "2000000000"
+        ],
+        "Faxes": [
+            "2000000000"
+        ],
+        "Address": {
+            "CountryCode": "GR",
+            "City": "issuer's city",
+            "Street": "issuer's street",
+            "Number": "issuer's number",
+            "Postal": "issuer's postal code"
+        },
+        "BranchCode": 0
+    },
+    "CounterParty": {
+        "RegisteredName": "Recipient's name",
+        "contactPerson": "Recipient's Contact Person",
+        "Vat": "EL118058830",
+        "TaxOffice": "Recipient's Tax Office",
+        "Phones": [
+            "200000000"
+        ],
+        "Address": {
+            "CountryCode": "GR",
+            "City": "Recipient's city",
+            "Street": "Recipient's street",
+            "Number": "Recipient's number",
+            "Postal": "Recipient's postal code"
+        },
+        "BranchCode": 0
+    },
+    "transporter": {
+        "RegisteredName": "Transporter",
+        "Vat": "EL118058830",
+        "Address": {
+            "CountryCode": "GR",
+            "City": "city",
+            "Street": "street",
+            "Number": "number",
+            "Postal": "postal code"
+        },
+        "BranchCode": 0
+    },
+    "buyer": {
+        "RegisteredName": "Consignee (Re-Seller)",
+        "Vat": "EL118058830",
+        "Address": {
+            "CountryCode": "GR",
+            "City": "city",
+            "Street": "street",
+            "Number": "number",
+            "Postal": "postal code"
+        },
+        "BranchCode": 0
+    },
+    "seller": {
+        "RegisteredName": "Consignor (Seller - Sender)",
+        "Vat": "EL118058830",
+        "Address": {
+            "CountryCode": "GR",
+            "City": "city",
+            "Street": "street",
+            "Number": "number",
+            "Postal": "postal code"
+        },
+        "BranchCode": 0
+    },
+    "additionalTransporters": [
+        {
+            "RegisteredName": "Other Transporter",
+            "Vat": "EL118058830",
+            "Address": {
+                "CountryCode": "GR",
+                "City": "city",
+                "Street": "street",
+                "Number": "number",
+                "Postal": "postal code"
+            },
+            "BranchCode": 0
+        }
+    ],
+    "otherRelatedEntities": [
+        {
+            "registeredName": "Other Correlated Entity",
+            "Vat": "EL118058830",
+            "Address": {
+                "CountryCode": "GR",
+                "City": "city",
+                "Street": "street",
+                "Number": "number",
+                "Postal": "postal code"
+            },
+            "BranchCode": 0
+        }
+    ],
+    "DistributionDetails": {
+        "InternalDocumentId": "InternalDocId_DNv2.0.1000000001",
+        "movePurposeCode": 1,
+        "movePurpose": "Sales",
+        "dispatchDate": "2026-04-12T12:51:55",
+        "dispatchtime": "2026-04-12T12:51:55",
+        "vehileNumber": "P999",
+        "reverseDeliveryNotePurpose": null,
+        "toWeigh": false,
+        "packingDeclarations": [
+            {
+                "packagingType": "Box",
+                "packagingTypeCode": 3,
+                "quantity": 1
+            },
+            {
+                "packagingType": "Shipping container",
+                "packagingTypeCode": 6,
+                "quantity": 1
+            }
+        ],
+        "DeliveryOriginDetails": {
+            "remarks": "loading name",
+            "shippingBranchCode": 10,
+            "Address": {
+                "City": "loading city",
+                "Street": "loading street",
+                "Number": "loading number",
+                "Postal": "loading postal code"
+            }
+        },
+        "DeliveryDestinationDetails": {
+            "remarks": "delivery name",
+            "shippingBranchCode": 0,
+            "Address": {
+                "City": "delivery city",
+                "Street": "delivery street",
+                "Number": "delivery number",
+                "Postal": "delivery postal code",
+                "GLN": "delivery GLN"
+            }
+        }
+    },
+    "AdditionalDetails": {
+        "TransmissionMethod": "A",
+        "accountingDepartmentEmails": [
+            "email@impact.gr"
+        ],
+        "documentTemplate": "defualt_deliverynote",
+        "customerCellNumbers": [
+            "+30000000000"
+        ],
+        "sendAsPdf": false,
+        "pdfNotificationEmails": [
+            "email@impact.gr"
+        ],
+        "DocumentTags": [
+            "DN",
+            "9.3"
+        ]
+    },
+    "details": [
+        {
+            "lineNo": 1,
+            "code": "000001",
+            "descriptions": [
+                "Item description 1"
+            ],
+            "remarks": "Item remarks 1",
+            "measurementUnit": "Piece",
+            "measurementUnitCode": 1,
+            "quantity": 2.2,
+            "quantityIn15Deg": null,
+            "vatCategoryCode": 8,
+            "taricNo": "0123456789",
+            "fuelCode": null,
+            "recordTypeCode": 0,
+            "movePurposeLineCode": 0,
+            "otherMovePurposeLineTitle": null,
+            "IncomeClassification": {
+                "ClassificationCategoryCode": "category3"
+            }
+        },
+        {
+            "lineNo": 2,
+            "code": "000002",
+            "descriptions": [
+                "Item description 2"
+            ],
+            "remarks": "Item remarks 2",
+            "measurementUnit": "Litre",
+            "measurementUnitCode": 3,
+            "quantity": 3.3,
+            "quantityIn15Deg": null,
+            "vatCategoryCode": 8,
+            "taricNo": "0123456789",
+            "fuelCode": null,
+            "recordTypeCode": 0,
+            "movePurposeLineCode": 0,
+            "otherMovePurposeLineTitle": null,
+            "IncomeClassification": {
+                "ClassificationCategoryCode": "category3"
+            }
+        },
+        {
+            "lineNo": 3,
+            "code": "000003",
+            "descriptions": [
+                "Item description 3"
+            ],
+            "remarks": "Item remarks 3",
+            "measurementUnit": "Meter",
+            "measurementUnitCode": 4,
+            "quantity": 4.5,
+            "quantityIn15Deg": null,
+            "vatCategoryCode": 8,
+            "taricNo": "0123456789",
+            "fuelCode": null,
+            "recordTypeCode": 0,
+            "movePurposeLineCode": 0,
+            "otherMovePurposeLineTitle": null,
+            "IncomeClassification": {
+                "ClassificationCategoryCode": "category3"
+            }
+        },
+        {
+            "lineNo": 4,
+            "code": "000004",
+            "descriptions": [
+                "Item description 4"
+            ],
+            "remarks": "Item remarks 4",
+            "measurementUnit": "KG",
+            "measurementUnitCode": 2,
+            "quantity": 5.7,
+            "quantityIn15Deg": null,
+            "vatCategoryCode": 8,
+            "taricNo": "0123456789",
+            "fuelCode": null,
+            "recordTypeCode": 0,
+            "movePurposeLineCode": 0,
+            "otherMovePurposeLineTitle": null,
+            "IncomeClassification": {
+                "ClassificationCategoryCode": "category3"
+            }
+        },
+        {
+            "lineNo": 5,
+            "code": "000005",
+            "descriptions": [
+                "Item description 5"
+            ],
+            "remarks": "Item remarks 5",
+            "measurementUnit": "Piece",
+            "measurementUnitCode": 1,
+            "quantity": 6.9,
+            "quantityIn15Deg": null,
+            "vatCategoryCode": 8,
+            "taricNo": "0123456789",
+            "fuelCode": null,
+            "recordTypeCode": 0,
+            "movePurposeLineCode": 0,
+            "otherMovePurposeLineTitle": null,
+            "IncomeClassification": {
+                "ClassificationCategoryCode": "category3"
+            }
+        },
+        {
+            "lineNo": 6,
+            "code": "000006",
+            "descriptions": [
+                "Item description 6"
+            ],
+            "remarks": "Item remarks 6",
+            "measurementUnit": "Litre",
+            "measurementUnitCode": 3,
+            "quantity": 7,
+            "quantityIn15Deg": null,
+            "vatCategoryCode": 8,
+            "taricNo": "0123456789",
+            "fuelCode": null,
+            "recordTypeCode": 0,
+            "movePurposeLineCode": 0,
+            "otherMovePurposeLineTitle": null,
+            "IncomeClassification": {
+                "ClassificationCategoryCode": "category3"
+            }
+        },
+        {
+            "lineNo": 7,
+            "code": "000007",
+            "descriptions": [
+                "Item description 7"
+            ],
+            "remarks": "Item remarks 7",
+            "measurementUnit": "Meter",
+            "measurementUnitCode": 4,
+            "quantity": 8.2,
+            "quantityIn15Deg": null,
+            "vatCategoryCode": 8,
+            "taricNo": "0123456789",
+            "fuelCode": null,
+            "recordTypeCode": 0,
+            "movePurposeLineCode": 0,
+            "otherMovePurposeLineTitle": null,
+            "IncomeClassification": {
+                "ClassificationCategoryCode": "category3"
+            }
+        },
+        {
+            "lineNo": 8,
+            "code": "000008",
+            "descriptions": [
+                "Item description 8"
+            ],
+            "remarks": "Item remarks 8",
+            "measurementUnit": "KG",
+            "measurementUnitCode": 2,
+            "quantity": 9.4,
+            "quantityIn15Deg": null,
+            "vatCategoryCode": 8,
+            "taricNo": "0123456789",
+            "fuelCode": null,
+            "recordTypeCode": 0,
+            "movePurposeLineCode": 0,
+            "otherMovePurposeLineTitle": null,
+            "IncomeClassification": {
+                "ClassificationCategoryCode": "category3"
+            }
+        },
+        {
+            "lineNo": 9,
+            "code": "000009",
+            "descriptions": [
+                "Item description 9"
+            ],
+            "remarks": "Item remarks 9",
+            "measurementUnit": "Piece",
+            "measurementUnitCode": 1,
+            "quantity": 10.5,
+            "quantityIn15Deg": null,
+            "vatCategoryCode": 8,
+            "taricNo": "0123456789",
+            "fuelCode": null,
+            "recordTypeCode": 0,
+            "movePurposeLineCode": 0,
+            "otherMovePurposeLineTitle": null,
+            "IncomeClassification": {
+                "ClassificationCategoryCode": "category3"
+            }
+        },
+        {
+            "lineNo": 10,
+            "code": "000010",
+            "descriptions": [
+                "Item description 10"
+            ],
+            "remarks": "Item remarks 10",
+            "measurementUnit": "Litre",
+            "measurementUnitCode": 3,
+            "quantity": 11.7,
+            "quantityIn15Deg": null,
+            "vatCategoryCode": 8,
+            "taricNo": "0123456789",
+            "fuelCode": null,
+            "recordTypeCode": 0,
+            "movePurposeLineCode": 0,
+            "otherMovePurposeLineTitle": null,
+            "IncomeClassification": {
+                "ClassificationCategoryCode": "category3"
+            }
+        },
+        {
+            "lineNo": 11,
+            "code": "000011",
+            "descriptions": [
+                "Item description 11"
+            ],
+            "remarks": "Item remarks 11",
+            "measurementUnit": "Meter",
+            "measurementUnitCode": 4,
+            "quantity": 12.9,
+            "quantityIn15Deg": null,
+            "vatCategoryCode": 8,
+            "taricNo": "0123456789",
+            "fuelCode": null,
+            "recordTypeCode": 0,
+            "movePurposeLineCode": 0,
+            "otherMovePurposeLineTitle": null,
+            "IncomeClassification": {
+                "ClassificationCategoryCode": "category3"
+            }
+        },
+        {
+            "lineNo": 12,
+            "code": "000012",
+            "descriptions": [
+                "Item description 12"
+            ],
+            "remarks": "Item remarks 12",
+            "measurementUnit": "KG",
+            "measurementUnitCode": 2,
+            "quantity": 13,
+            "quantityIn15Deg": null,
+            "vatCategoryCode": 8,
+            "taricNo": "0123456789",
+            "fuelCode": null,
+            "recordTypeCode": 0,
+            "movePurposeLineCode": 0,
+            "otherMovePurposeLineTitle": null,
+            "IncomeClassification": {
+                "ClassificationCategoryCode": "category3"
+            }
+        },
+        {
+            "lineNo": 13,
+            "code": "000013",
+            "descriptions": [
+                "Item description 13"
+            ],
+            "remarks": "Item remarks 13",
+            "measurementUnit": "Piece",
+            "measurementUnitCode": 1,
+            "quantity": 14.2,
+            "quantityIn15Deg": null,
+            "vatCategoryCode": 8,
+            "taricNo": "0123456789",
+            "fuelCode": null,
+            "recordTypeCode": 0,
+            "movePurposeLineCode": 0,
+            "otherMovePurposeLineTitle": null,
+            "IncomeClassification": {
+                "ClassificationCategoryCode": "category3"
+            }
+        },
+        {
+            "lineNo": 14,
+            "code": "000014",
+            "descriptions": [
+                "Item description 14"
+            ],
+            "remarks": "Item remarks 14",
+            "measurementUnit": "Litre",
+            "measurementUnitCode": 3,
+            "quantity": 15.4,
+            "quantityIn15Deg": null,
+            "vatCategoryCode": 8,
+            "taricNo": "0123456789",
+            "fuelCode": null,
+            "recordTypeCode": 0,
+            "movePurposeLineCode": 0,
+            "otherMovePurposeLineTitle": null,
+            "IncomeClassification": {
+                "ClassificationCategoryCode": "category3"
+            }
+        },
+        {
+            "lineNo": 15,
+            "code": "000015",
+            "descriptions": [
+                "Item description 15"
+            ],
+            "remarks": "Item remarks 15",
+            "measurementUnit": "Meter",
+            "measurementUnitCode": 4,
+            "quantity": 16.6,
+            "quantityIn15Deg": null,
+            "vatCategoryCode": 8,
+            "taricNo": "0123456789",
+            "fuelCode": null,
+            "recordTypeCode": 0,
+            "movePurposeLineCode": 0,
+            "otherMovePurposeLineTitle": null,
+            "IncomeClassification": {
+                "ClassificationCategoryCode": "category3"
+            }
+        },
+        {
+            "lineNo": 16,
+            "code": "000016",
+            "descriptions": [
+                "Item description 16"
+            ],
+            "remarks": "Item remarks 16",
+            "measurementUnit": "KG",
+            "measurementUnitCode": 2,
+            "quantity": 17.7,
+            "quantityIn15Deg": null,
+            "vatCategoryCode": 8,
+            "taricNo": "0123456789",
+            "fuelCode": null,
+            "recordTypeCode": 0,
+            "movePurposeLineCode": 0,
+            "otherMovePurposeLineTitle": null,
+            "IncomeClassification": {
+                "ClassificationCategoryCode": "category3"
+            }
+        },
+        {
+            "lineNo": 17,
+            "code": "000017",
+            "descriptions": [
+                "Item description 17"
+            ],
+            "remarks": "Item remarks 17",
+            "measurementUnit": "Piece",
+            "measurementUnitCode": 1,
+            "quantity": 18.9,
+            "quantityIn15Deg": null,
+            "vatCategoryCode": 8,
+            "taricNo": "0123456789",
+            "fuelCode": null,
+            "recordTypeCode": 0,
+            "movePurposeLineCode": 0,
+            "otherMovePurposeLineTitle": null,
+            "IncomeClassification": {
+                "ClassificationCategoryCode": "category3"
+            }
+        },
+        {
+            "lineNo": 18,
+            "code": "000018",
+            "descriptions": [
+                "Item description 18"
+            ],
+            "remarks": "Item remarks 18",
+            "measurementUnit": "Litre",
+            "measurementUnitCode": 3,
+            "quantity": 19.1,
+            "quantityIn15Deg": null,
+            "vatCategoryCode": 8,
+            "taricNo": "0123456789",
+            "fuelCode": null,
+            "recordTypeCode": 0,
+            "movePurposeLineCode": 0,
+            "otherMovePurposeLineTitle": null,
+            "IncomeClassification": {
+                "ClassificationCategoryCode": "category3"
+            }
+        },
+        {
+            "lineNo": 19,
+            "code": "000019",
+            "descriptions": [
+                "Item description 19"
+            ],
+            "remarks": "Item remarks 19",
+            "measurementUnit": "Meter",
+            "measurementUnitCode": 4,
+            "quantity": 20.2,
+            "quantityIn15Deg": null,
+            "vatCategoryCode": 8,
+            "taricNo": "0123456789",
+            "fuelCode": null,
+            "recordTypeCode": 0,
+            "movePurposeLineCode": 0,
+            "otherMovePurposeLineTitle": null,
+            "IncomeClassification": {
+                "ClassificationCategoryCode": "category3"
+            }
+        },
+        {
+            "lineNo": 20,
+            "code": "000020",
+            "descriptions": [
+                "Item description 20"
+            ],
+            "remarks": "Item remarks 20",
+            "measurementUnit": "KG",
+            "measurementUnitCode": 2,
+            "quantity": 21.4,
+            "quantityIn15Deg": null,
+            "vatCategoryCode": 8,
+            "taricNo": "0123456789",
+            "fuelCode": null,
+            "recordTypeCode": 0,
+            "movePurposeLineCode": 0,
+            "otherMovePurposeLineTitle": null,
+            "IncomeClassification": {
+                "ClassificationCategoryCode": "category3"
+            }
+
+        }
+    ],
+    "summaries": {},
+    "MiscellaneousData": {
+        "Comments1": "Δελτίο Αποστολής 1/50 — Γραμμές 1–20"
+    }
+}

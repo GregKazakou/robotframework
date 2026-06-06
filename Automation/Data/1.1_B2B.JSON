@@ -5,12 +5,11 @@
     "CurrencyCode": "EUR",
     "InvoiceType": "Sales Invoice",
     "InvoiceTypeCode": "1.1",
-    "DocumentType": "Sales Invoice",
     "DocumentTypeCode": "INVOICE",
     "OrderNumber": "{{incrementalCounter}}",
-    "Series": "B2B",
-    "Number": "{{incrementalCounter}}",
-    "DateIssued": "{{currentdate}}",
+    "Series": "Series",
+    "Number": "Number",
+    "DateIssued": "DateIssued",
     "isReverseDeliveryNote": false,
     "isDeliveryNote": false,
     "selfPricing": false,
@@ -18,7 +17,7 @@
     "vatPaymentSuspension": false,
     "Issuer": {
         "RegisteredName": "issuer's name",
-        "Vat": "{{vat1}}",
+        "Vat": "IssuerVat",
         "TaxOffice": "issuer's Tax Office",
         "contactPerson": "issuer' Contact Person",
         "Phones": [
@@ -38,7 +37,7 @@
     },
     "CounterParty": {
         "RegisteredName": "counter party's Name",
-        "Vat": "EL118058830",
+        "Vat": "CounterPartyVat",
         "TaxOffice": "counter party's Tax Office",
         "contactPerson": "counter party's Contact Person",
         "Phones": [
@@ -54,10 +53,10 @@
         "BranchCode": 0
     },
     "DistributionDetails": {
-        "InternalDocumentId": "ERP_Unique_DocumentId{{incrementalCounter}}{{currentdate}}"
+        "InternalDocumentId": "InternalDocumentId"
     },
     "PaymentDetails": {
-        "paymentDate": "{{currentdate}}",
+        "paymentDate": "2028-04-14",
         "exchangeCurrencyRate": 1.00000,
         "PaymentMethods": [
             {
@@ -86,16 +85,16 @@
             "gkazakou@impact.gr"
         ],
         "customerCellNumbers": [
-            "+30000000000"
+            "+306900000000"
         ],
         "sendAsPdf": false,
         "pdfNotificationEmails": [
-            "gkazakou@impact.gr"
+
         ],
         "documentTemplate": null,
         "DocumentTags": [
             "transactionType=B2B",
-            "ERP=SAP"
+            "Test Plan"
         ]
     },
     "Details": [

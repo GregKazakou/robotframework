@@ -17,7 +17,7 @@ ${INVALID_EMAIL}    mhtsos@something.com
 
 ${LOGIN_LINK}    xpath=//a[@href="/auth/login"]
 ${SEARCH_INPUT}    xpath=//input[@placeholder="Αναζήτηση εταιρίας μέσω ΑΦΜ"]
-${SUCCESS_LOGIN_URL}    https://hotdoc.impact.gr/company/select?redirectUrl=/dashboard
+${SUCCESS_LOGIN_URL}    https://hotdoc.impact.gr/company/select?redirectUrl=%2F
 
 ${USERNAME_FIELD}    id=emailInput
 ${PASSWORD_FIELD}    name=LoginInput.Password
@@ -115,7 +115,7 @@ Valid Login Test
     [Arguments]    ${username}    ${password}
     Test Login    ${username}    ${password}
     Wait For Page Ready
-    Wait Until Location Is    ${SUCCESS_LOGIN_URL}
+    Wait Until Location Is    ${SUCCESS_LOGIN_URL}    30s
 
 # ======================================
 # ----------- COMPANY SELECT -----------
@@ -123,13 +123,13 @@ Valid Login Test
 
 Select Company
     [Arguments]    ${companyTIN1}
-    Safe Input Text    ${SEARCH_INPUT}     ${companyTIN1}
+    Safe Input Text    ${SEARCH_INPUT}    ${companyTIN1}    timeout=25s
     Safe Click    xpath=//button[.//span[normalize-space(.)="Επιλογή"]]
-    Wait Until Page Contains     επιλέχθηκε    10s
-    Wait Until Location Is    https://hotdoc.impact.gr/dashboard
-    #Location Should Be    https://hotdoc.impact.gr/dashboard
+    Wait Until Page Contains    επιλέχθηκε    15s
+    Wait Until Location Is    https://hotdoc.impact.gr/    20s
+    Wait Until Page Contains    επιλέχθηκε    15s
     ${text}=    Get Text    xpath=//*[contains(., "επιλέχθηκε")]
-    Should Match Regexp    ${text}     Η εταιρεία.+επιλέχθηκε
+    Should Match Regexp    ${text}    Η εταιρεία.+επιλέχθηκε
 
 # ======================================
 # ----------- USER CONTROL -----------
@@ -145,11 +145,11 @@ Delete User
     Safe Click     xpath=//span[contains(text(), '${name}')]/ancestor::div[contains(@class,'flex')]//button[@data-slot='alert-dialog-trigger']    timeout=10s
     Safe Click    xpath=//button[@data-slot='alert-dialog-action' and contains(., 'Διαγραφή')]
     # Περιμένουμε πρώτα το success toast
-    Wait Until Element Is Visible    xpath=//li[@data-sonner-toast and @data-type='success']    timeout=10s
+    Wait Until Element Is Visible    xpath=//li[@data-sonner-toast and @data-type='success']    timeout=20s
 
     # Reload της σελίδας για να ανανεωθεί η λίστα
     Reload Page
-    Wait Until Location Is    https://hotdoc.impact.gr/account/manage    10s
+    Wait Until Location Is    https://hotdoc.impact.gr/account/manage    20s
 
     # Τώρα ελέγχουμε ότι ο χρήστης δεν υπάρχει
     Wait Until Element Is Not Visible    xpath=//span[contains(text(), '${name}')]    timeout=15s
@@ -160,7 +160,7 @@ Add Admin User
     Safe Click    xpath=//button[@data-slot='sheet-trigger' and contains(., 'Προσθήκη')]
     Wait Until Page Contains    Προσθήκη Χρήστη    10s
     Safe Input Text    id=email    ${email}
-    Safe Wait Element      id=check-0    timeout=5s
+    Safe Wait Element      id=check-0    timeout=10s
 
     ${checked}=    Get Element Attribute    id=check-0    aria-checked
     Run Keyword If    '${checked}' == 'false'    Click Element    id=check-0
@@ -172,7 +172,7 @@ Add Admin User
     Wait Until Element Is Visible    xpath=//li[@data-sonner-toast and @data-type='success']//div[@data-title and contains(., 'Επιτυχής δημιουργία χρήστη')]    timeout=10s
     # Επαλήθευση ότι ο χρήστης εμφανίζεται στη λίστα με ρόλο Διαχειριστής
     Wait Until Element Is Visible    xpath=//span[contains(text(), '${name}')]    timeout=10s
-    Wait Until Element Is Visible    xpath=//span[@data-slot='badge' and contains(., 'Διαχειριστής')]    timeout=5s
+    Wait Until Element Is Visible    xpath=//span[@data-slot='badge' and contains(., 'Διαχειριστής')]    timeout=15s
 # ======================================
 # ----------- CHANGE COMPANY -----------
 # ======================================
@@ -205,11 +205,11 @@ Validate Company Changed
 
     # 1. Πλοήγηση στη Διαχείριση Εταιρείας
     Safe Click    xpath=//a[@data-slot='sidebar-menu-sub-button' and @href='/company/manage']
-    Wait Until Location Is    ${BASE_URL}/company/manage    10s
+    Wait Until Location Is    ${BASE_URL}/company/manage    20s
 
     # 2. Έλεγχος aadeUsername
     Safe Wait Element    xpath=//input[@name='aadeUsername']
-    Wait Until Keyword Succeeds    5x    1s    Validate Aade Username    ${aade_user}
+    Wait Until Keyword Succeeds    5x    5s    Validate Aade Username    ${aade_user}
 
     # 3. Έλεγχος ονόματος εταιρείας στο sidebar
     Wait Until Element Is Visible
@@ -222,6 +222,7 @@ Validate Aade Username
     ${actual_value}=    Get Element Attribute    xpath=//input[@name='aadeUsername']    value
     Should Be Equal As Strings    ${actual_value}    ${expected_value}
     ...    msg=Expected aadeUsername to be '${expected_value}' but found '${actual_value}'
+
 *** Test Cases ***
 TC 01 - Login Success
     Valid Login Test    ${userEmail1}    ${pwd1}

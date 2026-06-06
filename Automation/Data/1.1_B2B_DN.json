@@ -1,0 +1,229 @@
+{
+
+"IAPRSignPolicy": 2,
+"CurrencyCode": "EUR",
+"InvoiceType": "Sales Delivery note Invoice",
+"InvoiceTypeCode": "1.1",
+"SpecialInvoiceCategory": 0,
+"VariationType": 0,
+"DocumentTypeCode": "INVOICE",
+"IsDeliveryNote": false,
+"Series": "{{SERIES}}",
+"Number": "{{NUMBER}}",
+"DateIssued": "{{DATE_ISSUED}}",
+"CorrelatedInvoices": [],
+"MultipleConnectedMarks": [],
+"DeliveryNoteMarks": [],
+"OrderNumber": "179",
+"Issuer": {
+  "RegisteredName": "issuer's name",
+  "ContactPerson": "issuer' Contact Person",
+  "Vat": "{{ISSUER_VAT}}",
+  "TaxOffice": "issuer's Tax Office",
+  "Phones": ["2000000000"],
+  "Faxes": ["2000000000"],
+  "Address": {
+    "CountryCode": "GR",
+    "City": "issuer's city",
+    "Street": "issuer's street",
+    "Number": "issuer's number",
+    "Postal": "issuer's postal code"
+  },
+  "BranchCode": 3
+},
+"CounterParty": {
+  "RegisteredName": "counter party's Name",
+  "ContactPerson": "counter party's Contact Person",
+  "Vat": "{{COUNTER_PARTY_VAT}}",
+  "TaxOffice": "counter party's Tax Office",
+  "Phones": ["20000000"],
+  "Address": {
+    "CountryCode": "GR",
+    "City": "counter party's city",
+    "Street": "counter party's street",
+    "Number": "counter party's number",
+    "Postal": "counter party's postal code",
+    "SupplyAccountNo": "123456789"
+  },
+  "BranchCode": 10
+},
+"Transporter": {
+  "RegisteredName": "Transporter",
+  "Vat": "{{TRANSPORTER_VAT}}",
+  "Address": {
+    "CountryCode": "GR",
+    "City": "city",
+    "Street": "street",
+    "Number": "number",
+    "Postal": "postal code"
+  },
+  "BranchCode": 10
+},
+"AdditionalTransporters": [
+  {
+    "RegisteredName": "Other Transporter",
+    "Vat": "EL165483609",
+    "Address": {
+      "CountryCode": "GR",
+      "City": "city",
+      "Street": "street",
+      "Number": "number",
+      "Postal": "postal code"
+    },
+    "BranchCode": 0
+  }
+],
+"OtherRelatedEntities": [
+  {
+    "RegisteredName": "Other Correlated Entity",
+    "Vat": "EL135952929",
+    "Address": {
+      "CountryCode": "GR",
+      "City": "city",
+      "Street": "street",
+      "Number": "number",
+      "Postal": "postal code"
+    },
+    "BranchCode": 0
+  }
+],
+"AllowancesCharges": [],
+"DistributionDetails": {
+  "InternalDocumentId": "{{INTERNAL_DOC_ID}}",
+  "MovePurpose": "Sales",
+  "MovePurposeCode": 1,
+  "PackingDeclarations": [
+    {
+      "PackagingType": "Box",
+      "PackagingTypeCode": 3,
+      "Quantity": 1
+    }
+  ],
+  "ToWeigh": false,
+  "DeliveryOriginDetails": {
+    "Address": {
+      "City": "issuer's Origin city",
+      "Street": "issuer's Origin street",
+      "Number": "issuer's Origin number",
+      "Postal": "issuer's Origin postal code"
+    },
+    "Remarks": "Issuer's Origin name",
+    "ShippingBranchCode": 3
+  },
+  "DeliveryDestinationDetails": {
+    "Address": {
+      "City": "Recipient's city",
+      "Street": "Recipient's street",
+      "Number": "Recipient's number",
+      "Postal": "Recipient's postal code",
+      "GLN": "505752573053"
+    },
+    "Remarks": "Recipient's name",
+    "ShippingBranchCode": 10
+  }
+},
+"PaymentDetails": {
+  "TransactionPaymentTerms": "Due at end of next 2 months",
+  "PreviousBalance": 3793888.27,
+  "NewBalance": 3802497.93,
+  "PaymentMethods": [
+    {
+      "PaymentMethodType": "Domestic Payments Account Number",
+      "PaymentMethodTypeCode": 1,
+      "Amount": 1500,
+      "Remarks": "Account Number XXXX",
+      "Contactless": false
+    },
+    {
+      "PaymentMethodType": "Web Banking",
+      "PaymentMethodTypeCode": 6,
+      "Amount": 500,
+      "Remarks": "Web Banking XXXX",
+      "Contactless": false
+    },
+    {
+      "PaymentMethodType": "On Credit",
+      "PaymentMethodTypeCode": 5,
+      "Amount": 2168.88,
+      "Remarks": "On Credit in 90 days",
+      "Contactless": false
+    }
+  ],
+  "PaymentTerms": [
+    {
+      "Amount": 3000
+
+    },
+    {
+      "Amount": 548.88
+    }
+  ],
+  "OtherPaymentDetails": "in 90 days",
+  "ExchangeCurrencyRate": 1
+},
+"AdditionalDetails": {
+  "NotificationDelay": 5,
+  "AccountingDepartmentEmails": ["customers@email.gr"],
+  "CustomerCellNumbers": ["+30000000000"],
+  "TransmissionMethod": "A",
+  "DocumentTags": ["transactionType=B2B", "ERP=Test plan"],
+  "SendAsPdf": false,
+  "AvoidEmailGrouping": false,
+  "PdfNotificationEmails": ["customers@email.gr"]
+},
+"Details": [
+  {
+    "LineNo": 1,
+    "Code": "000001",
+    "ItemCodification": "Barcode",
+    "Descriptions": ["Item description 1"],
+    "MeasurementUnit": "Piece",
+    "MeasurementUnitCode": 1,
+    "Quantity": 2.2,
+    "Remarks": "Item remarks 1",
+    "UnitPrice": 2.63,
+    "NetTotal": 5.79,
+    "Total": 6.54,
+    "VATTotal": 0.75,
+    "VatCategory": "13%",
+    "VatCategoryCode": 2,
+    "IsInformative": false,
+    "IsHidden": false,
+    "RecordTypeCode": 0,
+    "IncomeClassification": {
+      "Id": 0,
+      "ClassificationTypeCode": "E3_561_002",
+      "ClassificationCategoryCode": "category1_2",
+      "Amount": 5.79
+    }
+  }
+],
+"Summaries": {
+  "TotalCatalogNetAmount": 5.79,
+  "TotalNetAmount": 5.79,
+  "TotalVATAmount": 0.75,
+  "TotalWithheldAmount": 0,
+  "TotalFeesAmount": 0,
+  "TotalStampDutyAmount": 0,
+  "TotalOtherTaxesAmount": 0,
+  "TotalDeductionsAmount": 0,
+  "TotalGrossValue": 6.54,
+  "TotalPayableAmount": 6.54
+},
+"Taxes": [],
+"VatAnalysis": [
+  {
+    "Name": "13%",
+    "Percentage": 13,
+    "VatAmount": 0.75,
+    "UnderlyingValue": 5.79
+  }
+],
+"VatPaymentSuspension": false,
+"SelfPricing": false,
+"IsDelayed": false,
+"IsDelayedCode": 0,
+"IsFuelInvoice": false,
+"IsReverseDeliveryNote": false,
+"IsRetail": false
+}
