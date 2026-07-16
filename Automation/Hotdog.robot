@@ -142,7 +142,7 @@ Navigate To User Management
 
 Delete User
     [Arguments]    ${name}=${newUserName}
-    Safe Click     xpath=//span[contains(text(), '${name}')]/ancestor::div[contains(@class,'flex')]//button[@data-slot='alert-dialog-trigger']    timeout=10s
+    Safe Click    xpath=//div[@data-slot='card'][.//span[normalize-space(.)='${name}']]//button[@data-slot='alert-dialog-trigger' and @data-variant='destructive']    timeout=10s
     Safe Click    xpath=//button[@data-slot='alert-dialog-action' and contains(., 'Διαγραφή')]
     # Περιμένουμε πρώτα το success toast
     Wait Until Element Is Visible    xpath=//li[@data-sonner-toast and @data-type='success']    timeout=20s
@@ -152,7 +152,7 @@ Delete User
     Wait Until Location Is    https://hotdoc.impact.gr/account/manage    20s
 
     # Τώρα ελέγχουμε ότι ο χρήστης δεν υπάρχει
-    Wait Until Element Is Not Visible    xpath=//span[contains(text(), '${name}')]    timeout=15s
+    Wait Until Element Is Not Visible    xpath=//div[@data-slot='card'][.//span[normalize-space(.)='${name}']]    timeout=15s
 
 Add Admin User
     [Arguments]    ${name}=${newUserName}    ${email}=${newUserEmail}
