@@ -9,7 +9,8 @@ Automation/                       # Robot test suites + JSON templates
   ├── FNB_flows.robot                  (TC 01 – TC 16)
   ├── FNB_InternalID_Cases.robot       (TC 01 – TC 07)
   ├── POS_flows.robot                  (TC 01 – TC 05)
-  └── Receipts_InternalID_Cases.robot  (TC 01 – TC 07)
+  ├── Receipts_InternalID_Cases.robot  (TC 01 – TC 07)
+  └── DN Life Cycle.robot              (TC 01 – TC 40)  # Ψηφιακή Διακίνηση Αποθεμάτων Β΄ Φάση
 config/
   ├── credentials.py             # ❌ local only — never committed
   └── credentials.example.py     # ✅ template for new devs
@@ -31,6 +32,24 @@ robot --outputdir results Automation/
 `config/credentials.py` is gitignored — never commit it.
 
 **PyCharm:** Just hit ▶️ on a `.robot` file. No env vars or scripts needed since `credentials.py` exists locally.
+
+### DN Life Cycle suite
+
+`DN Life Cycle.robot` covers the 40 Delivery-Note lifecycle scenarios from the ΣΕΠΕ v4 guidance
+(Ψηφιακή Παρακολούθηση Διακίνησης Αποθεμάτων, Β΄ Φάση). It needs the extra `DN_*` variables added to
+`config/credentials.example.py` (provider API keys + AADE `aade-user-id`/`subscription-key` per role).
+
+- Create via the Provider API; `RegisterTransfer` / `ConfirmDeliveryOutcome` / `RejectDeliveryNote` /
+  `GetDeliveryNoteStatus` via AADE myDATA dev.
+- `ConfirmDeliveryReturn` and `RegisterTransfer–Return` are **placeholders** (not yet in the official API).
+  Tests that use them carry `[Tags] placeholder`:
+
+  ```bash
+  robot --exclude placeholder --outputdir results "Automation/DN Life Cycle.robot"
+  ```
+
+- Status assertions default to lenient (mismatches → warnings). Set `${STRICT_STATUS}=${True}` to enforce
+  once the exact status vocabulary is confirmed.
 
 ## How credentials work
 

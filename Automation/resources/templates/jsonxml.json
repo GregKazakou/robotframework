@@ -1,0 +1,143 @@
+{
+    "IAPRSignPolicy": 2,
+    "CurrencyCode": "EUR",
+    "InvoiceType": "Fuel Sales Invoice",
+    "SpecialInvoiceCategory": 0,
+    "VariationType": 0,
+    "DocumentTypeCode": "INVOICE",
+    "IsDeliveryNote": false,
+    "Series": "FB2B",
+    "Number": "000000099{{invoiceNumber}}",
+    "DateIssued": "{{currentDate}}",
+    "Issuer": {
+        "RegisteredName": "issuer Name",
+        "Vat": "{{issuerTIN}}",
+        "TaxOffice": "issuer TaxOffice",
+        "Activities": [
+            "Activities"
+        ],
+        "Phones": [
+            "3000000000"
+        ],
+        "Emails": [
+            "email@impact.gr"
+        ],
+        "Address": {
+            "Country": "country",
+            "CountryCode": "GR",
+            "City": "City",
+            "Street": "Street",
+            "Postal": "Postal"
+        },
+        "Branch": "Branch2",
+        "BranchCode": 0,
+        "BranchAddress": {
+            "Country": "country",
+            "CountryCode": "GR",
+            "City": "City",
+            "Street": "Street",
+            "Postal": "Postal"
+        },
+        "BranchPhones": [
+            ""
+        ]
+    },
+    "CounterParty": {
+        "RegisteredName": "CounterParty Name",
+        "Vat": "{{counterPartyTIN}}",
+        "Activities": [
+            "Activities"
+        ],
+        "Phones": [
+            "3000000000",
+            "3000000000"
+        ],
+        "Address": {
+            "Country": "country",
+            "CountryCode": "GR",
+            "City": "City",
+            "Street": "Street",
+            "Postal": "Postal"
+        },
+        "BranchCode": 0
+    },
+    "AllowancesCharges": [],
+    "DistributionDetails": {
+        "InternalDocumentId": "InternalDocumentId-{{invoiceNumber}}",
+        "MovePurpose": "Sales",
+        "DispatchDate": "{{currentDate}}",
+        "VehileNumber": "p999",
+        "DeliveryOriginDetails": {
+            "Address": {
+                "Street": "Street, Postal City"
+            }
+        },
+        "DeliveryDestinationDetails": {
+            "Address": {
+                "Street": "Street City, Postal City"
+            }
+        }
+    },
+    "PaymentDetails": {
+        "PreviousBalance": 1127.59,
+        "NewBalance": 1164.58,
+        "PaymentMethods": [
+            {
+                "PaymentMethodId": "2",
+                "PaymentMethodType": "On Credit "
+            }
+        ],
+        "ExchangeCurrencyRate": 1
+    },
+    "AdditionalDetails": {
+        "AccountingDepartmentEmails": [],
+        "TransmissionMethod": "A",
+        "SendAsPdf": false,
+        "AvoidEmailGrouping": false,
+        "PdfNotificationEmails": []
+    },
+    "Details": [
+        {
+            "LineNo": 1,
+            "Code": "20",
+            "Descriptions": [
+                "Fuel"
+            ],
+            "MeasurementUnit": "LIT",
+            "Quantity": 20.91,
+            "TotalNetValueBeforeTotalDiscount": 36.98979,
+            "UnitPrice": 1.769,
+            "NetTotalAfterInlineALCs": 36.99,
+            "NetTotal": 29.83,
+            "Total": 36.99,
+            "VATTotal": 7.16,
+            "fuelCode": 20,
+            "VatCategory": "24",
+            "IsInformative": false,
+            "IsHidden": false,
+            "RecordTypeCode": 0
+        }
+    ],
+    "Summaries": {
+        "TotalNetAmount": 29.83,
+        "TotalVATAmount": 7.16,
+        "TotalWithheldAmount": 0,
+        "TotalGrossValue": 36.99,
+        "TotalAllowances": 0,
+        "TotalAllowancesWithoutLines": 0
+    },
+    "VatAnalysis": [
+        {
+            "Name": "24%",
+            "Percentage": 24,
+            "VatAmount": 7.16,
+            "UnderlyingValue": 29.83
+        }
+    ],
+    "MiscellaneousData": {
+        "Comments1": ""
+    },
+    "IsDelayedCode": 0,
+    "AadeXml": "<?xml version=\"1.0\" encoding=\"utf-8\"?><InvoicesDoc xmlns=\"http://www.aade.gr/myDATA/invoice/v1.0\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:icls=\"https://www.aade.gr/myDATA/incomeClassificaton/v1.0\" xmlns:ecls=\"https://www.aade.gr/myDATA/expensesClassificaton/v1.0\"><invoice><issuer><vatNumber>{{issuerTIN}}</vatNumber><country>GR</country><branch>0</branch><name>issuer Name</name><address><street>Street</street><number>0</number><postalCode>Postal</postalCode><city>City</city></address></issuer><counterpart><vatNumber>{{counterPartyTIN}}</vatNumber><country>GR</country><branch>0</branch><name>CounterParty Name</name><address><street>Street</street><number>0</number><postalCode>Postal</postalCode><city>City</city></address></counterpart><invoiceHeader><series>FB2B</series><aa>000000099{{invoiceNumber}}</aa><issueDate>{{currentDate}}</issueDate><invoiceType>1.1</invoiceType><currency>EUR</currency><dispatchDate>{{currentDate}}</dispatchDate><vehicleNumber>P999</vehicleNumber><movePurpose>1</movePurpose><fuelInvoice>true</fuelInvoice><otherDeliveryNoteHeader><loadingAddress><street>Street</street><number>0</number><postalCode>Postal</postalCode><city>City</city></loadingAddress><deliveryAddress><street>Street</street><number>0</number><postalCode>Postal</postalCode><city>City</city></deliveryAddress></otherDeliveryNoteHeader><isDeliveryNote>true</isDeliveryNote></invoiceHeader><paymentMethods><paymentMethodDetails><type>5</type><amount>36.99</amount><tipAmount>0.00</tipAmount></paymentMethodDetails></paymentMethods><invoiceDetails><lineNumber>1</lineNumber><itemCode>20</itemCode><itemDescr>fuel</itemDescr><fuelCode>20</fuelCode><quantity>20.91000</quantity><measurementUnit>3</measurementUnit><netValue>29.83</netValue><vatCategory>1</vatCategory><vatAmount>7.16</vatAmount><discountOption>true</discountOption><incomeClassification><icls:classificationType>E3_561_001</icls:classificationType><icls:classificationCategory>category1_1</icls:classificationCategory><icls:amount>29.83</icls:amount></incomeClassification></invoiceDetails><invoiceSummary><totalNetValue>29.83</totalNetValue><totalVatAmount>7.16</totalVatAmount><totalWithheldAmount>0.00</totalWithheldAmount><totalFeesAmount>0.00</totalFeesAmount><totalStampDutyAmount>0.00</totalStampDutyAmount><totalOtherTaxesAmount>0.00</totalOtherTaxesAmount><totalDeductionsAmount>0.00</totalDeductionsAmount><totalGrossValue>36.99</totalGrossValue><incomeClassification><icls:classificationType>E3_561_001</icls:classificationType><icls:classificationCategory>category1_1</icls:classificationCategory><icls:amount>29.83</icls:amount></incomeClassification></invoiceSummary></invoice></InvoicesDoc>",
+    "IsReverseDeliveryNote": false
+}

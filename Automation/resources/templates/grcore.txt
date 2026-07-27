@@ -1,0 +1,113 @@
+H$GR20200619H0360D124X16T05P08#####INVOICE#Sales Invoice#####1.1#{{invoiceNumber}}######H87##20260619 000000######{{issuerTIN}}##########GR############1###########counter party's name######{{counterPartyTIN}}#######GR#############sale###############GR############counter party's name#8431#8431##Item descriptions#GR##counter party's city#counter party's city#counter party's city#counter party's street##counter party's postal#0#############################################GR####################################################240.9#57.82#298.72######################ΠΙΣΤΩΣΗ 60ΗΜΕΡΩΝ###############################################courier company################304359###################################################D$1##item code##########description######ΤΕΜ##240#####1##############240##24#57.6################################240######################################H87############D$2##item code##########description######ΤΕΜ##0.9#####1##############0.9##24#0.22################################0.9######################################H87############T$24#240.9#57.82###P$20260716 000000#298.72#EURO######A$#{{validEmailAddress}}###{{TransmissionMethod}}################
+<?xml version="1.0" encoding="utf-8"?>
+<InvoicesDoc xmlns="http://www.aade.gr/myDATA/invoice/v1.0" xmlns:icls="https://www.aade.gr/myDATA/incomeClassificaton/v1.0" xmlns:ecls="https://www.aade.gr/myDATA/expensesClassificaton/v1.0">
+    <invoice>
+    <transmissionFailure>1</transmissionFailure>
+        <issuer>
+            <vatNumber>{{issuerTIN}}</vatNumber>
+            <country>GR</country>
+            <branch>0</branch>
+            <name>issuer name</name>
+            <address>
+                <street>issuer's street</street>
+                <number>0</number>
+                <postalCode>issuer's postal</postalCode>
+                <city>issuer's city</city>
+            </address>
+        </issuer>
+        <counterpart>
+            <vatNumber>{{counterPartyTIN}}</vatNumber>
+            <country>GR</country>
+            <branch>0</branch>
+            <name>counter party's name</name>
+            <address>
+                <street>counter party's street</street>
+                <number>0</number>
+                <postalCode>counter party's postal</postalCode>
+                <city>counter party's city</city>
+            </address>
+        </counterpart>
+        <invoiceHeader>
+            <series>00ΤΔΑ</series>
+            <aa>{{invoiceNumber}}</aa>
+            <issueDate>2026-06-19</issueDate>
+            <invoiceType>1.1</invoiceType>
+            <vatPaymentSuspension>false</vatPaymentSuspension>
+            <currency>EUR</currency>
+            <exchangeRate>1</exchangeRate>
+            <movePurpose>1</movePurpose>
+            <otherDeliveryNoteHeader>
+                <loadingAddress>
+                    <street>street</street>
+                    <number>0</number>
+                    <postalCode>postal</postalCode>
+                    <city>city</city>
+                </loadingAddress>
+                <deliveryAddress>
+                    <street>street</street>
+                    <number>number</number>
+                    <postalCode>postal</postalCode>
+                    <city>city</city>
+                </deliveryAddress>
+                <startShippingBranch>0</startShippingBranch>
+                <completeShippingBranch>0</completeShippingBranch>
+            </otherDeliveryNoteHeader>
+            <isDeliveryNote>true</isDeliveryNote>
+        </invoiceHeader>
+        <paymentMethods>
+            <paymentMethodDetails>
+                <type>5</type>
+                <amount>298.72</amount>
+            </paymentMethodDetails>
+        </paymentMethods>
+        <invoiceDetails>
+            <lineNumber>1</lineNumber>
+            <itemCode>item code</itemCode>
+            <itemDescr>description</itemDescr>
+            <quantity>1</quantity>
+            <measurementUnit>1</measurementUnit>
+            <netValue>240</netValue>
+            <vatCategory>1</vatCategory>
+            <vatAmount>57.6</vatAmount>
+            <discountOption>true</discountOption>
+            <incomeClassification>
+                <icls:classificationType>E3_561_001</icls:classificationType>
+                <icls:classificationCategory>category1_1</icls:classificationCategory>
+                <icls:amount>240</icls:amount>
+                <icls:id>1</icls:id>
+            </incomeClassification>
+        </invoiceDetails>
+        <invoiceDetails>
+            <lineNumber>2</lineNumber>
+            <itemCode>item code</itemCode>
+            <itemDescr>description</itemDescr>
+            <quantity>1</quantity>
+            <measurementUnit>1</measurementUnit>
+            <netValue>0.9</netValue>
+            <vatCategory>1</vatCategory>
+            <vatAmount>0.22</vatAmount>
+            <discountOption>true</discountOption>
+            <incomeClassification>
+                <icls:classificationType>E3_561_001</icls:classificationType>
+                <icls:classificationCategory>category1_1</icls:classificationCategory>
+                <icls:amount>0.9</icls:amount>
+                <icls:id>1</icls:id>
+            </incomeClassification>
+        </invoiceDetails>
+        <invoiceSummary>
+            <totalNetValue>240.9</totalNetValue>
+            <totalVatAmount>57.82</totalVatAmount>
+            <totalWithheldAmount>0</totalWithheldAmount>
+            <totalFeesAmount>0</totalFeesAmount>
+            <totalStampDutyAmount>0</totalStampDutyAmount>
+            <totalOtherTaxesAmount>0</totalOtherTaxesAmount>
+            <totalDeductionsAmount>0</totalDeductionsAmount>
+            <totalGrossValue>298.72</totalGrossValue>
+            <incomeClassification>
+                <icls:classificationType>E3_561_001</icls:classificationType>
+                <icls:classificationCategory>category1_1</icls:classificationCategory>
+                <icls:amount>240.9</icls:amount>
+            </incomeClassification>
+        </invoiceSummary>
+    </invoice>
+</InvoicesDoc>#############################

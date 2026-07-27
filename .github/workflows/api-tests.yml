@@ -18,6 +18,8 @@ jobs:
         Automation/FNB_InternalID_Cases.robot
         Automation/POS_flows.robot
         Automation/Receipts_InternalID_Cases.robot
+        Automation/DN Life Cycle.robot
+        Automation/einvoicing_notifications.robot
     steps:
       - uses: actions/checkout@v4
       - id: set
@@ -56,12 +58,43 @@ jobs:
       - name: Create credentials file from secrets
         env:
           EINVOICE_API_KEY: ${{ secrets.EINVOICE_API_KEY }}
+          # --- einvoicing_notifications suite (optional overrides) ---
+          NOTIF_VALID_EMAIL: ${{ secrets.NOTIF_VALID_EMAIL }}
+          NOTIF_VALID_CELL: ${{ secrets.NOTIF_VALID_CELL }}
+          # --- DN Life Cycle suite ---
+          UAT_API_KEY_RECIPIENT: ${{ secrets.UAT_API_KEY_RECIPIENT }}
+          AADE_USER_ID_ISSUER: ${{ secrets.AADE_USER_ID_ISSUER }}
+          SUBSCRIPTION_KEY_ISSUER: ${{ secrets.SUBSCRIPTION_KEY_ISSUER }}
+          AADE_USER_ID_RECIPIENT: ${{ secrets.AADE_USER_ID_RECIPIENT }}
+          SUBSCRIPTION_KEY_RECIPIENT: ${{ secrets.SUBSCRIPTION_KEY_RECIPIENT }}
+          AADE_USER_ID_TRANSPORTER: ${{ secrets.AADE_USER_ID_TRANSPORTER }}
+          SUBSCRIPTION_KEY_TRANSPORTER: ${{ secrets.SUBSCRIPTION_KEY_TRANSPORTER }}
         shell: bash
         run: |
           mkdir -p config
           cat > config/credentials.py << EOF
           EINVOICE_API_KEY = "${EINVOICE_API_KEY}"
           ISSUER_VAT       = "EL154697391"
+
+          # --- einvoicing_notifications suite ---
+          UAT_API          = "https://einvoiceapiuat.impact.gr"
+          API_KEY          = EINVOICE_API_KEY
+          ISSUER_TIN       = "154697391"
+          COUNTERPARTY_TIN = "987654321"
+          VALID_EMAIL      = "${NOTIF_VALID_EMAIL:-accounting.valid@test-company.gr}"
+          INVALID_EMAIL    = "invalid-email-address"
+          VALID_CELL       = "${NOTIF_VALID_CELL:-306912345678}"
+          INVALID_CELL     = "12345"
+          INVOICE_SEED     = "1"
+
+          # --- DN Life Cycle suite ---
+          UAT_API_KEY_RECIPIENT        = "${UAT_API_KEY_RECIPIENT}"
+          AADE_USER_ID_ISSUER          = "${AADE_USER_ID_ISSUER}"
+          SUBSCRIPTION_KEY_ISSUER      = "${SUBSCRIPTION_KEY_ISSUER}"
+          AADE_USER_ID_RECIPIENT       = "${AADE_USER_ID_RECIPIENT}"
+          SUBSCRIPTION_KEY_RECIPIENT   = "${SUBSCRIPTION_KEY_RECIPIENT}"
+          AADE_USER_ID_TRANSPORTER     = "${AADE_USER_ID_TRANSPORTER}"
+          SUBSCRIPTION_KEY_TRANSPORTER = "${SUBSCRIPTION_KEY_TRANSPORTER}"
           EOF
 
       - id: slug
@@ -74,8 +107,15 @@ jobs:
         shell: bash
         run: |
           mkdir -p results
+          # DN Life Cycle: skip tests that depend on the not-yet-existing
+          # ConfirmDeliveryReturn / RegisterTransfer-Return endpoints.
+          EXTRA_ARGS=""
+          case "${{ matrix.suite }}" in
+            *"DN Life Cycle"*) EXTRA_ARGS="--exclude placeholder" ;;
+          esac
           robot --outputdir results \
                 --output output.xml --log log.html --report report.html \
+                $EXTRA_ARGS \
                 "${{ matrix.suite }}"
 
       - name: Upload per-suite artifact

@@ -1,0 +1,229 @@
+{
+    "IsDelayedCode": 0,
+    "iaprSignPolicy": 2,
+    "specialInvoiceCategory": 0,
+    "CurrencyCode": "EUR",
+    "InvoiceType": "Sales Invoice",
+    "InvoiceTypeCode": "1.1",
+    "DocumentTypeCode": "INVOICE",
+    "Series": "B2B",
+    "Number": "1001234{{invoiceNumber}}",
+    "DateIssued": "{{currentDateTime}}",
+    "OrderNumber": "01",
+    "RelativeDocuments": [],
+    "correlatedInvoices": [],
+    "multipleConnectedMarks": [],
+    "isReverseDeliveryNote": false,
+    "isDeliveryNote": true,
+    "selfPricing": false,
+    "isFuelInvoice": false,
+    "vatPaymentSuspension": false,
+    "Issuer": {
+        "RegisteredName": "issuer's name",
+        "BrandName": "issuer's brand",
+        "contactPerson": "Issuer Contact Person",
+        "Vat": "{{issuerTIN}}",
+        "TaxOffice": "issuer's Tax Office",
+        "Phones": [
+            "2000000000"
+        ],
+        "Faxes": [
+            "2000000000"
+        ],
+        "Address": {
+            "CountryCode": "GR",
+            "City": "issuer's city",
+            "Street": "issuer's street",
+            "Number": "issuer's number",
+            "Postal": "issuer's postal code"
+        },
+        "BranchCode": 0
+    },
+    "CounterParty": {
+        "RegisteredName": "counter party's name",
+        "BrandName": "counter party's brand",
+        "contactPerson": "counter party' Contact Person",
+        "Vat": "{{counterPartyTIN}}",
+        "TaxOffice": "counter party's Tax Office",
+        "Phones": [
+            "200000000"
+        ],
+        "Address": {
+            "CountryCode": "GR",
+            "City": "counter party's city",
+            "Street": "counter party's street",
+            "Number": "counter party's number",
+            "Postal": "counter party's postal code"
+        },
+        "BranchCode": 0
+    },
+    "Banks": [
+        {
+            "Name": "bank",
+            "IBAN": "GR000000000000000"
+        },
+        {
+            "Name": "bank",
+            "IBAN": "CY000000000000000"
+        }
+    ],
+    "DistributionDetails": {
+        "InternalDocumentId": "ERP_Unique_DocumentGUId{{invoiceNumber}}",
+        "movePurposeCode": 1,
+        "movePurpose": "Sales",
+        "DeliveryOriginDetails": {
+            "remarks": "Issuer's Origin name",
+            "Address": {
+                "CountryCode": "GR",
+                "City": "issuer's Origin city",
+                "Street": "issuer's Origin street",
+                "Number": "issuer's Origin number",
+                "Postal": "issuer's Origin postal code"
+            }
+        },
+        "DeliveryDestinationDetails": {
+            "remarks": "Recipient's name",
+            "Address": {
+                "CountryCode": "GR",
+                "City": "Recipient's city",
+                "Street": "Recipient's street",
+                "Number": "Recipient's number",
+                "Postal": "Recipient's postal code",
+                "GLN": "Recipient's GLN"
+            }
+        }
+    },
+    "PaymentDetails": {
+        "paymentDate": "{{currentDateTime}}",
+        "exchangeCurrencyRate": 1.00000,
+        "PaymentMethods": [
+            {
+                "PaymentMethodType": "ON CREDIT",
+                "PaymentMethodTypeCode": 5,
+                "amount": 146.03,
+                "remarks": "ON CREDIT in 90 days"
+            }
+        ]
+    },
+    "AdditionalDetails": {
+        "TransmissionMethod": "{{TransmissionMethod}}",
+        "accountingDepartmentEmails": [
+           "{{validEmailAddress}}", "{{invalidEmailAddress}}"
+        ],
+        "documentTemplate": "DefualtTemplate",
+        "notificationDelay": {{DelayMinutes}},
+        "customerCellNumbers": [
+           "{{validCellphoneNumber}}", "{{invalidCellphoneNumber}}"
+        ],
+        "sendAsPdf": {{InvoiceAttach}},
+        "pdfNotificationEmails": [
+                 "{{validEmailAddress}}", "{{invalidEmailAddress}}"
+        ],
+        "DocumentTags": [
+            "B2B",
+            "{{TransmissionMethod}}",
+            "{{DelayMinutes}}"
+
+        ]
+    },
+    "details": [
+        {
+            "lineNo": 1,
+            "code": "000001",
+            "itemCodification": "Barcode",
+            "descriptions": [
+                "Item descriptions"
+            ],
+            "remarks": "Item remarks",
+            "measurementUnit": "Piece",
+            "measurementUnitCode": 1,
+            "quantity": 1.0,
+            "totalNetValueBeforeTotalDiscount": 40.00,
+            "lineApportionedDiscountValue": 5.80,
+            "unitPrice": 40.00,
+            "netTotalAfterInlineALCs": 40.00,
+            "netTotal": 34.2,
+            "vatTotal": 5.81,
+            "vatCategory": "17",
+            "vatCategoryCode": 4,
+            "isInformative": false,
+            "isHidden": false,
+            "noVat": false,
+            "discountOption": false,
+            "taricNo": null,
+            "recordTypeCode": 0,
+            "IncomeClassification": {
+                "ClassificationTypeCode": "E3_561_001",
+                "ClassificationCategoryCode": "category1_1"
+            },
+            "expensesClassification": {
+                "classificationTypeCode": null,
+                "classificationCategoryCode": null
+            },
+            "vatClassification": {
+                "classificationTypeCode": null,
+                "classificationCategoryCode": null
+            }
+        },
+        {
+            "lineNo": 1,
+            "code": "000001",
+            "itemCodification": "Barcode",
+            "descriptions": [
+                "Item descriptions"
+            ],
+            "remarks": "Item remarks",
+            "measurementUnit": "Piece",
+            "measurementUnitCode": 1,
+            "quantity": 1.0,
+            "totalNetValueBeforeTotalDiscount": 100.00,
+            "lineApportionedDiscountValue": 14.50,
+            "unitPrice": 100.00,
+            "netTotalAfterInlineALCs": 100.00,
+            "netTotal": 85.50,
+            "vatTotal": 20.52,
+            "vatCategory": "24",
+            "vatCategoryCode": 1,
+            "isInformative": false,
+            "isHidden": false,
+            "noVat": false,
+            "discountOption": false,
+            "taricNo": null,
+            "recordTypeCode": 0,
+            "IncomeClassification": {
+                "ClassificationTypeCode": "E3_561_001",
+                "ClassificationCategoryCode": "category1_1"
+            },
+            "expensesClassification": {
+                "classificationTypeCode": null,
+                "classificationCategoryCode": null
+            },
+            "vatClassification": {
+                "classificationTypeCode": null,
+                "classificationCategoryCode": null
+            }
+        }
+    ],
+    "summaries": {
+        "totalCatalogNetAmount": 140.00,
+        "totalNetAmount": 119.70,
+        "totalNetAmountAfterLineDiscounts": 140.00,
+        "totalVATAmount": 26.33,
+        "totalGrossValue": 146.03,
+        "totalAllowances": 20.30,
+        "totalCharges": 0.0,
+        "totalPayableAmount": 146.03
+    },
+    "VatAnalysis": [
+        {
+            "Name": "24%",
+            "Percentage": 24,
+            "VatAmount": 686.88,
+            "UnderlyingValue": 2862
+        }
+    ],
+    "MiscellaneousData": {
+        "Comments1": "Header remarks 1",
+        "Comments2": "Header remarks 2"
+    }
+}

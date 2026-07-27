@@ -1,0 +1,21 @@
+verdict,case_id,step,label,endpoint,expected,actual,success,message,mark,uid,signature_short
+PASS,F1,1,step1 signpos for 11.1,/PosTransactions/signpos,200,200,,,,,MEYCIQDV15xreI+llG3p+Vfm
+PASS,F1,2,step2 invoice 11.1 with signpos payment,/Invoice/json,201,201,True,Successfully submitted to IAPR,400001964984759,E180F00F84C0E530623693637C69E87FD6ABDC8D,EL154697391-18753564-104
+PASS,F1,3,validate signpos,/PosTransactions/validate,200,200,,,,,
+PASS,F2,1,step1 signpos for 8.4,/PosTransactions/signpos,200,200,,,,,MEQCIGyzoRP2WBmIWJEEk6Z/
+PASS,F2,2,step2 receipt 8.4 with signpos cardlines,/Receipt,201,201,True,Successfully submitted to IAPR,400001964984761,62FFDA36E226025E9C9093E3263624E6520F43F9,EL154697391-rAutoTestRec
+PASS,F2,3,validate signpos,/PosTransactions/validate,200,200,,,,,
+PASS,F2,4,step4 invoice 11.1 connected to 8.4,/Invoice/json,201,201,True,Successfully submitted to IAPR,400001964984762,465D0B170D1339A0E6014AA92B1FA544D45D0B9F,EL154697391-18753565-CA7
+PASS,F3,1,step1 invoice 11.1 plain,/Invoice/json,201,201,True,Successfully submitted to IAPR,400001964984763,28F0D61E5ADCEC2C2360B5D6D22EA39F9D87385E,EL154697391-18753566-AFC
+PASS,F3,2,step2 signpos for 11.1 mark,/PosTransactions/signpos,200,200,,,,,MEQCIE9RXV/zwEzeDwYH4beh
+PASS,F3,3,step3 updatePayment for 11.1,/Invoice/updatePayment,200,200,True,400001964984764,,,
+PASS,F3,4,validate signpos,/PosTransactions/validate,200,200,,,,,
+PASS,F4,1,step1 receipt 8.4 plain,/Receipt,201,201,True,Successfully submitted to IAPR,400001964984765,68C65CAB1CE8DBF36F8BEF4A84C93B6043C95AAA,EL154697391-rAutoTestRec
+PASS,F4,2,step2 signpos for 8.4 mark,/PosTransactions/signpos,200,200,,,,,MEUCIFUu99I6VrsSZsxMrtO9
+FAIL,F4,3,step3 updatePayment for 8.4,/Invoice/updatePayment,200,400,False,Document with Mark 400001964984765 is invalid,,,
+PASS,F4,4,validate signpos,/PosTransactions/validate,200,200,,,,,
+PASS,F5,1,step1 invoice 11.1 first,/Invoice/json,201,201,True,Successfully submitted to IAPR,400001964984767,1B8381ECF14877EF629FCBC094932BC61B8084CD,EL154697391-18753568-6AC
+PASS,F5,2,step2 invoice 11.1 second,/Invoice/json,201,201,True,Successfully submitted to IAPR,400001964984768,EF5ACD5DC375E20781831809087A735C09276D66,EL154697391-18753569-1CF
+PASS,F5,3,step3 signpos 8.4 sum,/PosTransactions/signpos,200,200,,,,,MEQCIEen3CrkdIFgjFJEW9GF
+PASS,F5,4,step4 receipt 8.4 connected,/Receipt,201,201,True,Successfully submitted to IAPR,400001964984769,F6D28A4DEF6C3484F91A360CDAFD81F457BBDAF4,EL154697391-rAutoTestRec
+PASS,F5,5,validate signpos,/PosTransactions/validate,200,200,,,,,

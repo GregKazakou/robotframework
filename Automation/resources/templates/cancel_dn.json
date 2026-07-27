@@ -1,0 +1,8 @@
+{
+    "vat": "{{issuerTIN}}",
+    "mark": "{{documentMARK}}",
+    "notificationEmails": [
+        "{{validEmailAddress}}",
+        "{{invalidEmailAddress}}"
+    ]
+}

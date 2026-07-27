@@ -139,6 +139,18 @@ TC 16 - Zero After Multiple Offsetting Moves
     Send 11.1 Debit    gross=0     vat_rate=${13}    expected_marks_count=4
     Pool Should Be Empty
 
+TC 17 - Zero After Multiple Offsetting Moves
+    [Documentation]    Πολλαπλές κινήσεις που ακυρώνονται μεταξύ τους. Τα 8.6 είναι 13%,
+    ...                άρα το μηδενικό 11.1 πρέπει επίσης να φέρει VatCategoryCode=2.
+    ${m1}=    Send 8.6 Debit     gross=50    vat_rate=${13}
+    ${m2}=    Send 11.1 Debit    gross=30    vat_rate=${13}    ${m1}
+    ${m3}=    Send 8.6 Credit    gross=30    vat_rate=${13}
+    ${m4}=    Send 11.4 Credit    gross=30    vat_rate=${13}    
+    ${m5}=    Send 8.6 Credit    gross=20    vat_rate=${13}
+    ${m6}=    Send 11.1 Debit    gross=0     vat_rate=${13}
+    ${m7}=    Send 11.4 Credit    gross=0     vat_rate=${13}    expected_marks_count=4
+    Pool Should Be Empty
+
 *** Settings ***
 Documentation     FNB (Food & Beverage) Table Order Scenarios
 ...               Ροή: 8.6 debit/credit/cancel -> MARKs συσσωρεύονται ανά τραπέζι.
