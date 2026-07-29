@@ -187,3 +187,192 @@ def inject_items_and_fix_summaries(payload: dict, items: list) -> dict:
 
     return result
 
+
+# =============================================================================
+# dateIssued MATRIX HELPERS  (used by dateIssued_matrix.robot)
+# =============================================================================
+
+import re
+from datetime import datetime
+
+# Offset flavours applied to every base time. Order defines the variant
+# numbering (1..4) within each time group.
+_OFFSET_FLAVOURS = [
+    ("NAIVE", ""),        # no timezone info
+    ("Z",     "Z"),       # UTC 'Z'
+    ("P03",   "+03:00"),  # Greece standard offset
+    ("P00",   "+00:00"),  # zero offset, numeric
+]
+
+# Time-of-day groups: 'MID' = today at midnight, 'NOW' = current wall clock.
+_GROUPS = ["MID", "NOW"]
+
+_HTML_DT = re.compile(
+    r"(\d{1,2})/(\d{1,2})/(\d{4})\s+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*"
+    r"(π\.?μ\.?|μ\.?μ\.?)",   # π.μ. (AM) | μ.μ. (PM)
+    re.IGNORECASE,
+)
+_BOLD_CELL = re.compile(
+    r"<td[^>]*font-weight-bold[^>]*>(.*?)</td>", re.IGNORECASE | re.DOTALL
+)
+
+
+def build_datetime_variants():
+    """Return the 8 dateIssued variants (4 offset flavours x 2 time groups).
+
+    Each variant is a dict: index, group, offset_label, offset, date_issued.
+    'now' is snapshotted once so all variants of a run share one wall clock.
+    """
+    now = datetime.now().replace(microsecond=0)
+    bases = {
+        "MID": now.replace(hour=0, minute=0, second=0),
+        "NOW": now,
+    }
+
+    variants = []
+    idx = 0
+    for group in _GROUPS:
+        base_str = bases[group].strftime("%Y-%m-%dT%H:%M:%S")
+        for label, suffix in _OFFSET_FLAVOURS:
+            idx += 1
+            variants.append({
+                "index":        idx,
+                "group":        group,
+                "offset_label": label,
+                "offset":       suffix,
+                "date_issued":  base_str + suffix,
+            })
+    return variants
+
+
+def get_variant_field(variant, field):
+    """Return one field from a variant dict (keeps the .robot readable)."""
+    if field not in variant:
+        raise KeyError(f"Variant has no field '{field}'. Keys: {list(variant)}")
+    return variant[field]
+
+
+def build_series(series_prefix, variant):
+    """Run-identifiable Series token, e.g. FNB111-NOW-P03-20260728-120043."""
+    wall = _parse_wallclock(variant["date_issued"])
+    stamp = wall.strftime("%Y%m%d-%H%M%S")
+    return f"{series_prefix}-{variant['group']}-{variant['offset_label']}-{stamp}"
+
+
+def verify_sent_vs_response_format(sent_dt, resp_dt, strict=True):
+    """Assert the response echoes the same offset flavour that was sent.
+
+    strict=True  -> exact match ('Z' != '+00:00').
+    strict=False -> 'Z' and '+00:00' are treated as equivalent (UTC).
+    """
+    strict = _to_bool(strict)
+    sent_f = _offset_flavour(sent_dt)
+    resp_f = _offset_flavour(resp_dt)
+
+    ok = (sent_f == resp_f) if strict else (_utc_norm(sent_f) == _utc_norm(resp_f))
+    if not ok:
+        raise AssertionError(
+            f"dateIssued format mismatch (strict={strict}): "
+            f"sent flavour '{sent_f}' ({sent_dt}) != "
+            f"response flavour '{resp_f}' ({resp_dt})"
+        )
+    return resp_f
+
+
+def verify_response_datetime_skew(sent_dt, resp_dt, max_minutes=10):
+    """Assert response wall-clock time is within max_minutes of what was sent."""
+    max_minutes = float(max_minutes)
+    sent_wc = _parse_wallclock(sent_dt)
+    resp_wc = _parse_wallclock(resp_dt)
+    diff_min = abs((resp_wc - sent_wc).total_seconds()) / 60.0
+    if diff_min > max_minutes:
+        raise AssertionError(
+            f"dateIssued skew too large: sent {sent_dt} vs response {resp_dt} "
+            f"= {diff_min:.2f} min (max {max_minutes})"
+        )
+    return diff_min
+
+
+def verify_html_datetime(html, sent_dt, max_minutes=10):
+    """Extract the portal bold-cell datetime and assert it matches sent wall clock."""
+    max_minutes = float(max_minutes)
+    parsed = _extract_html_datetime(html)
+    if parsed is None:
+        raise AssertionError(
+            "Could not find a dd/mm/yyyy HH:MM π.μ./μ.μ. "
+            "datetime in the portal HTML."
+        )
+    html_wc, raw = parsed
+    sent_wc = _parse_wallclock(sent_dt)
+    diff_min = abs((html_wc - sent_wc).total_seconds()) / 60.0
+    if diff_min > max_minutes:
+        raise AssertionError(
+            f"Portal datetime skew too large: sent {sent_dt} vs portal '{raw}' "
+            f"= {diff_min:.2f} min (max {max_minutes})"
+        )
+    return raw
+
+
+# ------------------------------------------------------------------ internals
+
+def _offset_flavour(dt_str):
+    """Classify the wire-format offset of an ISO datetime string."""
+    s = (dt_str or "").strip()
+    if s.endswith("Z"):
+        return "Z"
+    m = re.search(r"([+-]\d{2}):?(\d{2})$", s)
+    if m:
+        return f"{m.group(1)}:{m.group(2)}"
+    return "NAIVE"
+
+
+def _utc_norm(flavour):
+    return "UTC" if flavour in ("Z", "+00:00") else flavour
+
+
+def _to_bool(value):
+    if isinstance(value, bool):
+        return value
+    return str(value).strip().lower() in ("1", "true", "yes", "y")
+
+
+def _parse_wallclock(dt_str):
+    """Parse an ISO string to a *naive* datetime (wall clock, tz stripped)."""
+    s = (dt_str or "").strip()
+    try:
+        dt = datetime.fromisoformat(s.replace("Z", "+00:00"))
+        return dt.replace(tzinfo=None)
+    except ValueError:
+        core = re.sub(r"(Z|[+-]\d{2}:?\d{2})$", "", s)
+        return datetime.fromisoformat(core)
+
+
+def _is_pm(meridiem):
+    """Greek: μ.μ. = PM (afternoon), π.μ. = AM (morning)."""
+    s = meridiem.strip().lower().replace(".", "").replace(" ", "")
+    return s.startswith("μ")
+
+
+def _extract_html_datetime(html):
+    html = html or ""
+    # Prefer bold cells (where the portal renders the issue datetime),
+    # fall back to scanning the whole document.
+    candidates = _BOLD_CELL.findall(html)
+    candidates.append(html)
+    for chunk in candidates:
+        m = _HTML_DT.search(chunk)
+        if not m:
+            continue
+        day, month, year, hour, minute, second, mer = m.groups()
+        hour = int(hour)
+        minute = int(minute)
+        second = int(second) if second else 0
+        if _is_pm(mer):
+            if hour != 12:
+                hour += 12
+        elif hour == 12:      # 12 π.μ. == midnight
+            hour = 0
+        dt = datetime(int(year), int(month), int(day), hour, minute, second)
+        return dt, m.group(0).strip()
+    return None
+

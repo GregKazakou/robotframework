@@ -139,17 +139,35 @@ TC 16 - Zero After Multiple Offsetting Moves
     Send 11.1 Debit    gross=0     vat_rate=${13}    expected_marks_count=4
     Pool Should Be Empty
 
-TC 17 - Zero After Multiple Offsetting Moves
+TC 17 - Zero After Multiple Offsetting table Moves
     [Documentation]    Πολλαπλές κινήσεις που ακυρώνονται μεταξύ τους. Τα 8.6 είναι 13%,
     ...                άρα το μηδενικό 11.1 πρέπει επίσης να φέρει VatCategoryCode=2.
-    ${m1}=    Send 8.6 Debit     gross=50    vat_rate=${13}
-    ${m2}=    Send 11.1 Debit    gross=30    vat_rate=${13}    ${m1}
-    ${m3}=    Send 8.6 Credit    gross=30    vat_rate=${13}
-    ${m4}=    Send 11.4 Credit    gross=30    vat_rate=${13}    
-    ${m5}=    Send 8.6 Credit    gross=20    vat_rate=${13}
-    ${m6}=    Send 11.1 Debit    gross=0     vat_rate=${13}
-    ${m7}=    Send 11.4 Credit    gross=0     vat_rate=${13}    expected_marks_count=4
-    Pool Should Be Empty
+    ${m1}=    Send 8.6 Debit     gross=100    vat_rate=${13}
+    ${m2}=    Send 11.1 Debit    ${m1}          gross=70    vat_rate=${13}
+    Sleep    1 minutes
+    ${m3}=    Send 8.6 Credit    ${m1}          gross=70    vat_rate=${13}
+    Sleep    1 minutes
+    ${m4}=    Send 11.4 Credit   ${m1}    ${m3}    gross=70    vat_rate=${13}
+    ${m5}=    Send 11.1 Debit    ${m1}    ${m3}    gross=30    vat_rate=${13}
+    Sleep    1 minutes
+    ${m6}=    Send 8.6 Credit    ${m1}          gross=30    vat_rate=${13}
+    ${m7}=    Send 11.4 Credit   ${m1}    ${m6}    gross=30    vat_rate=${13}
+
+ #TC 18 - Zero After Multiple Offsetting table Moves
+   # [Documentation]    Πολλαπλές κινήσεις που ακυρώνονται μεταξύ τους. Τα 8.6 είναι 13%,
+   # ...                άρα το μηδενικό 11.1 πρέπει επίσης να φέρει VatCategoryCode=2.
+   # ${m1}=    Send 8.6 Debit     gross=100    vat_rate=${13}
+   # ${m2}=    Send 11.1 Debit    ${m1}          gross=70    vat_rate=${13}
+   # ${m3}=    Send 8.6 Credit    ${m1}          gross=70    vat_rate=${13}
+   # ${m4}=    Send 11.4 Credit   ${m3}    gross=70    vat_rate=${13}
+   
+   # ${m5}=    Send 11.1 Debit    ${m3}    gross=30    vat_rate=${13}
+ 
+   # ${m6}=    Send 8.6 Credit    ${m1}          gross=30    vat_rate=${13}
+   # ${m7}=    Send 11.4 Credit   ${m6}        gross=30    vat_rate=${13}  
+   # ${m8}=    Send 8.6 Debit      ${m1}             gross=80         vat_rate=${13}
+   # ${m9}=    Send 11.1 Debit    ${m1}     ${m8}     gross=80    vat_rate=${13}
+   # ${m10}=    Send 8.6 Credit    ${m1}          gross=80    vat_rate=${13}
 
 *** Settings ***
 Documentation     FNB (Food & Beverage) Table Order Scenarios
@@ -256,12 +274,15 @@ Send 8.6 Debit
     RETURN                ${mark}
 
 Send 8.6 Credit
-    [Arguments]           ${gross}    ${vat_rate}=${DEFAULT_VAT_RATE}
+    [Arguments]           @{connects}    ${gross}    ${vat_rate}=${DEFAULT_VAT_RATE}
+    [Documentation]       Τα προαιρετικά positional MARKs (@{connects}) μπαίνουν στο
+    ...                   multipleConnectedMarks του request.
     ${payload}=           Copy Dictionary        ${TPL_8_6_CREDIT}    deepcopy=True
-    ${payload}=           Build 8 6 Payload      ${payload}    ${gross}    ${vat_rate}    record_type_code=${7}
+    ${payload}=           Build 8 6 Payload      ${payload}    ${gross}    ${vat_rate}
+    ...                                          record_type_code=${7}    marks=${connects}
     ${mark}=              POST 8.6 Document      ${payload}
     Append To List        ${PENDING_MARKS}       ${mark}
-    Log                   8.6 CREDIT gross=${gross} vat=${vat_rate}% -> MARK ${mark} | pool=${PENDING_MARKS}
+    Log                   8.6 CREDIT gross=${gross} vat=${vat_rate}% connects=${connects} -> MARK ${mark} | pool=${PENDING_MARKS}
     RETURN                ${mark}
 
 Send 8.6 Cancel
@@ -284,10 +305,16 @@ Send 8.6 Cancel
 # ======================================================================
 
 Send 11.1 Debit
-    [Arguments]           ${gross}    ${expected_marks_count}=${NONE}
+    [Arguments]           @{connects}    ${gross}    ${expected_marks_count}=${NONE}
     ...                   ${vat_rate}=${DEFAULT_VAT_RATE}
     ...                   ${close_all_pending}=${True}    ${peek}=${False}
-    ${marks_to_use}=      Pop Marks From Pool    close_all=${close_all_pending}    peek=${peek}
+    [Documentation]       Αν δοθούν positional MARKs (@{connects}), χρησιμοποιούνται αυτά
+    ...                   ρητά. Αλλιώς αντλεί από το pool (παλιά συμπεριφορά).
+    IF    ${connects}
+        ${marks_to_use}=      Set Variable           ${connects}
+    ELSE
+        ${marks_to_use}=      Pop Marks From Pool    close_all=${close_all_pending}    peek=${peek}
+    END
     IF    $expected_marks_count is not None
         Length Should Be    ${marks_to_use}    ${expected_marks_count}
     END
@@ -300,10 +327,19 @@ Send 11.1 Debit
     RETURN                ${mark}
 
 Send 11.4 Credit
-    [Arguments]           ${gross}    ${expected_marks_count}=${NONE}
+    [Arguments]           @{connects}    ${gross}    ${expected_marks_count}=${NONE}
     ...                   ${vat_rate}=${DEFAULT_VAT_RATE}    ${close_all_pending}=${True}
-    ...                   ${peek}=${False}                            # ← πρόσθεσε
-    ${marks_to_use}=      Pop Marks From Pool    close_all=${close_all_pending}    peek=${peek}  # ← πρόσθεσε
+    ...                   ${peek}=${False}
+    [Documentation]       Αν δοθούν positional MARKs (@{connects}), χρησιμοποιούνται αυτά
+    ...                   ρητά. Αλλιώς αντλεί από το pool (παλιά συμπεριφορά).
+    IF    ${connects}
+        ${marks_to_use}=      Set Variable           ${connects}
+    ELSE
+        ${marks_to_use}=      Pop Marks From Pool    close_all=${close_all_pending}    peek=${peek}
+    END
+    IF    $expected_marks_count is not None
+        Length Should Be    ${marks_to_use}    ${expected_marks_count}
+    END
     ${payload}=           Copy Dictionary        ${TPL_11_1}    deepcopy=True
     ${payload}=           Build 11 1 Payload     ${payload}    ${gross}    ${marks_to_use}
     ...                                          invoice_type_code=11.4    record_type_code=${0}
@@ -317,12 +353,16 @@ Send 11.4 Credit
 # ======================================================================
 
 Build 8 6 Payload
-    [Arguments]           ${template}    ${gross}    ${vat_rate}    ${record_type_code}=${0}
-    [Documentation]       Γεμίζει 8.6 payload με σωστά VAT calculations + unique number + current datetime
+    [Arguments]           ${template}    ${gross}    ${vat_rate}    ${record_type_code}=${0}    ${marks}=${NONE}
+    [Documentation]       Γεμίζει 8.6 payload με σωστά VAT calculations + unique number + current datetime.
+    ...                   Αν δοθεί ${marks}, τα βάζει στο multipleConnectedMarks.
     ${doc_number}=        Next Document Number
     ${now}=               Current DateTime ISO
     Set To Dictionary     ${template}    number=${doc_number}    dateIssued=${now}
     ...                                  tableId=${TABLE_ID}
+    IF    $marks is not None
+        Set To Dictionary     ${template}    multipleConnectedMarks=${marks}
+    END
     Apply Issuer Vat      ${template}
     Apply Line And Summaries    ${template}    ${gross}    ${vat_rate}    ${record_type_code}
     RETURN                ${template}

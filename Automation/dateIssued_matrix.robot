@@ -55,9 +55,9 @@ ${LOOSE_FORMAT}       ${False}
 
 *** Test Cases ***
 
-8.4 POS Return — dateIssued matrix
+8.4 POS Receipt — dateIssued matrix
     [Tags]    matrix    8.4
-    Run Datetime Matrix For Template    8.4_POS_Return_Receipt.json    POS84
+    Run Datetime Matrix For Template    8.4_POS_Receipt.json    POS84
 
 8.6 FNB Form — dateIssued matrix
     [Tags]    matrix    8.6
@@ -65,7 +65,7 @@ ${LOOSE_FORMAT}       ${False}
 
 11.1 FNB Retail — dateIssued matrix
     [Tags]    matrix    11.1
-    Run Datetime Matrix For Template    11.1_FNB_Retail.json    FNB111
+    Run Datetime Matrix For Template    11.1_FNB_Retail_Sales_Receipt.json    FNB111
 
 1.1 B2B — dateIssued matrix
     [Tags]    matrix    1.1
