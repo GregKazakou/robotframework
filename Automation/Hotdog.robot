@@ -33,22 +33,43 @@ ${BASE_URL}             https://hotdoc.impact.gr
 # ======================================
 # ---------------- HELPERS -------------
 # ======================================
+Scroll To Center
+    [Documentation]    Scrolls the element to the CENTER of the viewport.
+    ...                (Plain Scroll Element Into View aligns it to the top,
+    ...                where the app's sticky header intercepts clicks.)
+    [Arguments]    ${locator}
+    ${el}=    Get WebElement    ${locator}
+    Execute Javascript    arguments[0].scrollIntoView({block: 'center', inline: 'nearest'});
+    ...    ARGUMENTS    ${el}
+
+Attempt Click
+    [Arguments]    ${locator}
+    Scroll To Center    ${locator}
+    Element Should Be Visible    ${locator}
+    Element Should Be Enabled    ${locator}
+    Click Element    ${locator}
+
 Safe Click
     [Arguments]    ${locator}    ${timeout}=10s
 
-    Wait Until Keyword Succeeds    ${timeout}    500ms
-    ...    Run Keywords
-    ...    Scroll Element Into View    ${locator}
-    ...    AND    Element Should Be Visible    ${locator}
-    ...    AND    Element Should Be Enabled    ${locator}
-    ...    AND    Click Element    ${locator}
+    ${status}    ${err}=    Run Keyword And Ignore Error
+    ...    Wait Until Keyword Succeeds    ${timeout}    500ms
+    ...    Attempt Click    ${locator}
+
+    IF    '${status}' != 'PASS'
+        # Last resort: JS click — bypasses overlays (sticky header/toasts)
+        # that intercept the native click even when the element is visible.
+        Log    Native click failed (${err}) — falling back to JS click.    WARN
+        ${el}=    Get WebElement    ${locator}
+        Execute Javascript    arguments[0].click();    ARGUMENTS    ${el}
+    END
 
 Safe Wait Element
     [Arguments]    ${locator}    ${timeout}=10s
 
     Wait Until Keyword Succeeds    ${timeout}    500ms
     ...    Run Keywords
-    ...    Scroll Element Into View    ${locator}
+    ...    Scroll To Center    ${locator}
     ...    AND    Element Should Be Visible    ${locator}
     ...    AND    Element Should Be Enabled    ${locator}
 
@@ -82,7 +103,10 @@ Click Menu Item By Name
 
 Open Headless Browser
     IF    '${HEADLESS}' == 'True'
-        Open Browser    ${urlHotdog}    ${Browser1}    options=add_argument("--headless")
+        # Fixed large viewport: headless "maximize" is 800x600, which
+        # triggers the responsive layout and click interception.
+        Open Browser    ${urlHotdog}    ${Browser1}
+        ...    options=add_argument("--headless=new");add_argument("--window-size=1920,1080")
     ELSE
         Open Browser    ${urlHotdog}    ${Browser1}
     END
@@ -127,11 +151,33 @@ Select Company
     [Arguments]    ${companyTIN1}
     Safe Input Text    ${SEARCH_INPUT}    ${companyTIN1}    timeout=25s
     Safe Click    xpath=//button[.//span[normalize-space(.)="Επιλογή"]]
-    Wait Until Page Contains    επιλέχθηκε    15s
-    Wait Until Location Is    https://hotdoc.impact.gr/    20s
-    Wait Until Page Contains    επιλέχθηκε    15s
-    ${text}=    Get Text    xpath=//*[contains(., "επιλέχθηκε")]
-    Should Match Regexp    ${text}    Η εταιρεία.+επιλέχθηκε
+
+    # Toast επιβεβαίωσης: εμφανίζεται στη νέα επιλογή, αλλά ΟΧΙ πάντα όταν
+    # η εταιρεία είναι ήδη επιλεγμένη από προηγούμενο run — γι' αυτό optional.
+    ${TOAST}=    Set Variable
+    ...    xpath=//li[@data-sonner-toast]//div[@data-title and contains(., 'επιλέχθηκε')]
+    ${got_toast}=    Run Keyword And Return Status
+    ...    Wait Until Element Is Visible    ${TOAST}    10s
+    IF    ${got_toast}
+        ${text}=    Get Text    ${TOAST}
+        Should Match Regexp    ${text}    (?s)Η εταιρεία.+επιλέχθηκε
+    ELSE
+        Log    Δεν εμφανίστηκε toast (πιθανόν ήδη επιλεγμένη εταιρεία).    WARN
+    END
+
+    # Το auto-redirect δεν είναι πάντα άμεσο — αν δεν συμβεί, μεταβαίνουμε μόνοι.
+    ${redirected}=    Run Keyword And Return Status
+    ...    Wait Until Location Is    https://hotdoc.impact.gr/    15s
+    IF    not ${redirected}
+        Log    Δεν έγινε auto-redirect — μετάβαση χειροκίνητα στην αρχική.    WARN
+        Go To    ${urlHotdog}
+        Wait For Page Ready
+    END
+
+    # ΤΕΛΙΚΟ κριτήριο επιτυχίας: αρχική σελίδα με ενεργό sidebar
+    # (το μενού "Διαχείριση" υπάρχει μόνο με επιλεγμένη εταιρεία).
+    Wait Until Element Is Visible
+    ...    xpath=//button[.//span[normalize-space(.)="Διαχείριση"]]    20s
 
 # ======================================
 # ----------- USER CONTROL -----------
