@@ -30,19 +30,19 @@ Suite Setup       Setup Suite
 Test Setup        Reset Test Context
 
 *** Variables ***
-# --- Endpoints ---
-${PROVIDER_URL}                 https://einvoiceapiuat.impact.gr
-${AADE_URL}                     https://mydataapidev.aade.gr
+# --- Endpoints (from config/credentials.py) ---
+${PROVIDER_URL}                 ${UAT_API}
+${AADE_URL}                     ${MYDATA_API_DEV}
 ${TEMPLATE_9_3}                 ${CURDIR}/Data/9.3_Sales_20lines.json
 
 # --- Behaviour ---
 ${STRICT_STATUS}                ${False}
 
-# --- Party VATs (overridable από credentials.py) ---
-${DN_ISSUER_TIN}                154697391
-${DN_RECIPIENT_TIN}             135952929
-${DN_TRANSPORTER_TIN}           118058830
-${DN_CARRIER_VAT}               118058830
+# --- Party VATs (from config/credentials.py) ---
+${DN_ISSUER_TIN}                ${ISSUER_TIN}
+${DN_RECIPIENT_TIN}             ${RECIPIENT_TIN}
+${DN_TRANSPORTER_TIN}           ${TRANSPORTER_TIN}
+${DN_CARRIER_VAT}               ${TRANSPORTER_TIN}
 
 # --- Secrets: πρέπει να οριστούν στο credentials.py (default κενά -> Setup προειδοποιεί) ---
 ${DN_PROVIDER_API_KEY_ISSUER}          ${EINVOICE_API_KEY}

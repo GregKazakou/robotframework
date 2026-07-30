@@ -263,9 +263,9 @@ Library          String
 Variables        ${EXECDIR}/config/credentials.py
 
 *** Variables ***
-${BASE_URL}      https://einvoiceapiuat.impact.gr
+${BASE_URL}      ${UAT_API}
 ${API_KEY}       ${EINVOICE_API_KEY}
-${VAT1}          EL154697391
+${VAT1}          ${ISSUER_VAT}
 ${RUN_PREFIX}    ${EMPTY}
 
 *** Keywords ***

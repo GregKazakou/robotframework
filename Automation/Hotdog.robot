@@ -1,6 +1,7 @@
 *** Settings ***
 Documentation   Hotdog
 Library         SeleniumLibrary
+Variables       ${EXECDIR}/config/credentials.py
 Suite Setup     Open Headless Browser
 Suite Teardown  Close Browser Session
 
@@ -8,11 +9,12 @@ Suite Teardown  Close Browser Session
 ${urlHotdog}      https://hotdoc.impact.gr/
 ${Browser1}         Chrome
 ${HEADLESS}         False    # Τοπικά False, στο GitHub True
-${userEmail1}     gregkazakou@gmail.com
-${pwd1}           Papaki2!
-${companyTIN1}    135952929
-${newUserName}      Grigoris Kazakou
-${newUserEmail}     gkazakou@impact.gr
+# Λογαριασμός / στοιχεία από config/credentials.py — ποτέ hardcoded εδώ
+${userEmail1}     ${HOTDOG_USER_EMAIL}
+${pwd1}           ${HOTDOG_PASSWORD}
+${companyTIN1}    ${HOTDOG_COMPANY_TIN}
+${newUserName}      ${HOTDOG_NEW_USER_NAME}
+${newUserEmail}     ${HOTDOG_NEW_USER_EMAIL}
 ${INVALID_EMAIL}    mhtsos@something.com
 
 ${LOGIN_LINK}    xpath=//a[@href="/auth/login"]
@@ -23,8 +25,8 @@ ${USERNAME_FIELD}    id=emailInput
 ${PASSWORD_FIELD}    name=LoginInput.Password
 ${LOGIN_BUTTON}      id=loginButton
 ${LOGIN_URL}    https://hotdoc.impact.gr/auth/login
-${newCompanyName}      LMC Demo
-${expectedAadeUser}    LMCNEW2025
+${newCompanyName}      ${HOTDOG_COMPANY_NAME}
+${expectedAadeUser}    ${HOTDOG_EXPECTED_AADE_USER}
 ${BASE_URL}             https://hotdoc.impact.gr
 
 *** Keywords ***

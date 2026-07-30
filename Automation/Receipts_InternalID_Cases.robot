@@ -101,7 +101,7 @@ Suite Setup       Initialize Suite
 
 
 *** Variables ***
-${BASE_URL}                    https://einvoiceapiuat.impact.gr
+${BASE_URL}                    ${UAT_API}
 ${ENDPOINT}                    /Receipt
 # Set via: robot -v API_KEY:xxxxx ...    or    export EINVOICE_API_KEY=xxxxx
 ${API_KEY}                     ${EINVOICE_API_KEY}

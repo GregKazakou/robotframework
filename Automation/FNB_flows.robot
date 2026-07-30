@@ -58,17 +58,17 @@ TC 07.2 - Mixed Complex Flow 11.4 Credit
     Send 8.6 Debit     gross=20        # M5
     Send 8.6 Credit    gross=40        # M6
     Send 11.4 Credit    gross=10    expected_marks_count=6   # connects [M1,M2,M3,M4, M5,M6]
-#TC 07.3 - Mixed Complex Flow 11.1 Debit
-#    [Documentation]    Το σύνθετο σενάριο με 9 βήματα (το τελευταίο είναι 11.1)
-#    Send 8.6 Debit     gross=10        # M1
-#    Send 8.6 Debit    ${m2}     gross=30        # M2
-#    Send 8.6 Credit    gross=10        # M3
-#    Send 11.1 Debit    gross=20    expected_marks_count=3   peek=${True}    # connects [M1,M2,M3]
-#    Send 8.6 Debit     gross=30        # M4
-#    Send 11.1 Debit    gross=30    expected_marks_count=2   peek=${True}    # connects [M3,M4]
-#    Send 8.6 Debit     gross=20        # M5
-#    Send 8.6 Credit    gross=20        # M6
-#    Send 11.1 Debit    gross=10    expected_marks_count=3   # connects [M4, M5,M6]
+TC 07.3 - Mixed Complex Flow 11.1 Debit
+    [Documentation]    Το σύνθετο σενάριο με 9 βήματα (το τελευταίο είναι 11.1)
+    ${m1}=    Send 8.6 Debit     gross=10        
+    ${m2}=    Send 8.6 Debit     gross=30        
+    ${m3}=    Send 8.6 Credit    gross=10        
+    ${m4}=    Send 11.1 Debit   ${m1}    ${m2}    ${m3}     gross=20
+    ${m5}=    Send 8.6 Debit     gross=30        
+    ${m6}=    Send 11.1 Debit    ${m3}    ${m5}    gross=30    
+    ${m7}=    Send 8.6 Debit     gross=20      
+    ${m8}=    Send 8.6 Credit    gross=20      
+    ${m9}=    Send 11.1 Debit    ${m5}    ${m7}    ${m8}    gross=10
 TC 08 - Split Bill
     Send 8.6 Debit     gross=40
     Send 8.6 Debit     gross=40
@@ -153,7 +153,7 @@ TC 17 - Zero After Multiple Offsetting table Moves
     ${m6}=    Send 8.6 Credit    ${m1}          gross=30    vat_rate=${13}
     ${m7}=    Send 11.4 Credit   ${m1}    ${m6}    gross=30    vat_rate=${13}
 
- TC 18 - Cross-Linked Marks Over Successive Rounds
+ TC 18 - Cross-Linked FNB Marks Over Successive Rounds
     [Documentation]    Πολλαπλές κινήσεις που ακυρώνονται μεταξύ τους. Τα 8.6 είναι 13%,
     ...                άρα το μηδενικό 11.1 πρέπει επίσης να φέρει VatCategoryCode=2.
     ${m1}=    Send 8.6 Debit     gross=100    vat_rate=${13}
@@ -177,12 +177,12 @@ TC 17 - Zero After Multiple Offsetting table Moves
     ${m14}=    Send 11.1 Debit    ${m13}         gross=20    vat_rate=${13}
     ${m15}=    Send 8.6 Credit    ${m13}         gross=20    vat_rate=${13}
 
- TC 19 - Cross-Linked Marks Over Successive Rounds
+ TC 19 - Cross-Linked FNB Marks Over Successive Rounds
     [Documentation]    Πολλαπλές κινήσεις που ακυρώνονται μεταξύ τους. Τα 8.6 είναι 13%,
     ...                άρα το μηδενικό 11.1 πρέπει επίσης να φέρει VatCategoryCode=2.
     ${m1}=    Send 8.6 Debit     gross=100    vat_rate=${13}
     ${m2}=    Send 11.1 Debit    ${m1}          gross=70    vat_rate=${13}
-    ${m3}=    Send 11.1 Debit    ${m1}          gross=30    vat_rate=${13}
+    ${m3}=    Send 11.1 Debit    ${m1}          gross=29.90    vat_rate=${13}
 
 *** Settings ***
 Documentation     FNB (Food & Beverage) Table Order Scenarios — 8.6 Δελτίο Παραγγελίας Εστίασης
@@ -250,7 +250,7 @@ Suite Setup       Setup Suite
 Test Setup        Reset Pending Marks Pool
 
 *** Variables ***
-${BASE_URL}                https://einvoiceapiuat.impact.gr
+${BASE_URL}                ${UAT_API}
 ${TEMPLATE_8_6}            ${CURDIR}/Data/8.6_Debit_FNB_Form.json
 ${TEMPLATE_8_6_CREDIT}     ${CURDIR}/Data/8.6_Return_FNB_Form.json
 ${TEMPLATE_8_6_CANCEL}     ${CURDIR}/Data/8.6_Cancel_FNB_Form.json
@@ -259,7 +259,6 @@ ${TABLE_ID}                20
 ${DEFAULT_VAT_RATE}        ${13}
 ${PRODUCT_CODE}            251320104
 ${API_KEY}                 ${EINVOICE_API_KEY}
-${ISSUER_VAT}              EL154697391
 ${API_KEY_HEADER_NAME}     apikey
 @{PENDING_MARKS}
 ${DOC_COUNTER}             ${0}

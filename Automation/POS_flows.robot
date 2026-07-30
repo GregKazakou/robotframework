@@ -147,9 +147,9 @@ Suite Teardown    Finalize Suite
 
 
 *** Variables ***
-${BASE_URL}                    https://einvoiceapiuat.impact.gr
+${BASE_URL}                    ${UAT_API}
 ${API_KEY}                     ${EINVOICE_API_KEY}
-${ISSUER_VAT_NO_PREFIX}        154697391
+${ISSUER_VAT_NO_PREFIX}        ${ISSUER_TIN}
 ${ISSUER_VAT}                  EL${ISSUER_VAT_NO_PREFIX}
 ${TERMINAL_ID}                 16000198
 ${RESULTS_CSV}                 ${CURDIR}${/}flow_results.csv
