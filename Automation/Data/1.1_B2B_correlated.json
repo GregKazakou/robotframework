@@ -70,7 +70,7 @@
         "Address": {
             "CountryCode": "GR",
             "City": "city",
-            "Street": "street", //"street",
+            "Street": "street", 
             "Number": "number",
             "Postal": "postal code"
         },
@@ -80,12 +80,12 @@
         "InternalDocumentId": "ERP_Unique_DocumentId{{incrementalCounter}}{{currentdate}}"
     },
     "PaymentDetails": {
-        "TransactionPaymentTerms": "Due at end of next 2 months", //Payment Terms:
-        "PreviousBalance": 3793888.27, //Balance before post
-        "NewBalance": 3802497.93, //Balance after
+        "TransactionPaymentTerms": "Due at end of next 2 months", 
+        "PreviousBalance": 3793888.27, 
+        "NewBalance": 3802497.93, 
         "ElectronicPaymentCode": null,
         "OtherPaymentDetails": "in 90 days",
-        "exchangeCurrencyRate": 1.00000, //⚠️ Ισοτιμία|Currency rate
+        "exchangeCurrencyRate": 1.00000, 
         "PaymentMethods": [
             {
                 "PaymentMethodType": "ON CREDIT",

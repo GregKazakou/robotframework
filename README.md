@@ -10,7 +10,8 @@ Automation/                       # Robot test suites + JSON templates
   ├── FNB_InternalID_Cases.robot       (TC 01 – TC 07)
   ├── POS_flows.robot                  (TC 01 – TC 05)
   ├── Receipts_InternalID_Cases.robot  (TC 01 – TC 07)
-  └── DN Life Cycle.robot              (TC 01 – TC 40)  # Ψηφιακή Διακίνηση Αποθεμάτων Β΄ Φάση
+  ├── DN Life Cycle.robot              (TC 01 – TC 40)  # Ψηφιακή Διακίνηση Αποθεμάτων Β΄ Φάση
+  └── dateIssued_matrix.robot          (TC 01 – TC 32)  # dateIssued GR-timezone matrix (8.4/8.6/11.1/1.1)
 config/
   ├── credentials.py             # ❌ local only — never committed
   └── credentials.example.py     # ✅ template for new devs

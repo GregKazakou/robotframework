@@ -193,24 +193,51 @@ def inject_items_and_fix_summaries(payload: dict, items: list) -> dict:
 # =============================================================================
 
 import re
-from datetime import datetime
+from datetime import datetime, time as _time, timezone, timedelta
 
-# Offset flavours applied to every base time. Order defines the variant
-# numbering (1..4) within each time group.
-_OFFSET_FLAVOURS = [
-    ("NAIVE", ""),        # no timezone info
-    ("Z",     "Z"),       # UTC 'Z'
-    ("P03",   "+03:00"),  # Greece standard offset
-    ("P00",   "+00:00"),  # zero offset, numeric
-]
+# Europe/Athens with DST support. On Windows, zoneinfo needs the 'tzdata'
+# pip package; if it is missing we fall back to a fixed offset.
+try:
+    from zoneinfo import ZoneInfo
+    _ATHENS = ZoneInfo("Europe/Athens")
+    datetime.now(_ATHENS)  # force tz-db lookup so a missing tzdata fails here
+except Exception:
+    _ATHENS = timezone(timedelta(hours=3), name="EEST-fallback")
+
+
+def athens_offset_suffix():
+    """Current Europe/Athens UTC offset as '+HH:MM' (DST-aware:
+    +03:00 in summer / +02:00 in winter)."""
+    total = int(datetime.now(_ATHENS).utcoffset().total_seconds())
+    sign = "+" if total >= 0 else "-"
+    total = abs(total)
+    return f"{sign}{total // 3600:02d}:{(total % 3600) // 60:02d}"
+
+
+def _offset_flavours():
+    """Offset flavours applied to every base time. Order defines the variant
+    numbering (1..4) within each time group. The Greece offset is computed
+    at runtime so the matrix stays valid across DST changes."""
+    ath = athens_offset_suffix()
+    return [
+        ("NAIVE", ""),      # no timezone info -> treated as Greece local
+        ("Z",     "Z"),     # UTC 'Z'          -> must convert to Greece
+        ("ATH",   ath),     # current Greece offset (was hardcoded '+03:00')
+        ("P00",   "+00:00"),  # zero offset, numeric -> same instant as 'Z'
+    ]
 
 # Time-of-day groups: 'MID' = today at midnight, 'NOW' = current wall clock.
 _GROUPS = ["MID", "NOW"]
 
+# Invoice portal: dd/mm/yyyy h:mm π.μ./μ.μ. (12-hour + Greek meridiem)
 _HTML_DT = re.compile(
     r"(\d{1,2})/(\d{1,2})/(\d{4})\s+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*"
     r"(π\.?μ\.?|μ\.?μ\.?)",   # π.μ. (AM) | μ.μ. (PM)
     re.IGNORECASE,
+)
+# Receipt portal: dd-mm-yyyy HH:MM:SS (24-hour, no meridiem)
+_HTML_DT_24H = re.compile(
+    r"(\d{1,2})[-/](\d{1,2})[-/](\d{4})\s+(\d{1,2}):(\d{2})(?::(\d{2}))?"
 )
 _BOLD_CELL = re.compile(
     r"<td[^>]*font-weight-bold[^>]*>(.*?)</td>", re.IGNORECASE | re.DOTALL
@@ -233,7 +260,7 @@ def build_datetime_variants():
     idx = 0
     for group in _GROUPS:
         base_str = bases[group].strftime("%Y-%m-%dT%H:%M:%S")
-        for label, suffix in _OFFSET_FLAVOURS:
+        for label, suffix in _offset_flavours():
             idx += 1
             variants.append({
                 "index":        idx,
@@ -243,6 +270,16 @@ def build_datetime_variants():
                 "date_issued":  base_str + suffix,
             })
     return variants
+
+
+def find_variant(variants, group, offset_label):
+    """Return the variant dict matching (group, offset_label),
+    e.g. ('MID', 'Z'). Lets each Robot test case address one exact case."""
+    for v in variants:
+        if v["group"] == group and v["offset_label"] == offset_label:
+            return v
+    known = [(v["group"], v["offset_label"]) for v in variants]
+    raise ValueError(f"No variant {group}/{offset_label}. Known: {known}")
 
 
 def get_variant_field(variant, field):
@@ -313,7 +350,108 @@ def verify_html_datetime(html, sent_dt, max_minutes=10):
     return raw
 
 
+# =============================================================================
+# GR-TIMEZONE-AWARE CHECKS  (business rules of the einvoice app)
+# =============================================================================
+#
+# The application's documented behaviour:
+#   1. If the payload time is literally 00:00:00 -> the app stamps the
+#      document with the CURRENT time at submission.
+#   2. If the payload carries a UTC marker ('Z' or '+00:00') -> the app
+#      respects it and converts the instant to Greece local time.
+#   3. A naive datetime (no offset) is treated as already Greece local.
+#   4. The portal always displays Europe/Athens wall-clock time.
+
+def expected_athens_datetime(sent_dt, submitted_at=None):
+    """Return (expected_athens_wallclock, rule_label) for a sent dateIssued.
+
+    submitted_at: optional ISO string / aware datetime of the moment the
+    invoice was POSTed; defaults to 'now'. Only used by the midnight rule.
+    """
+    wall = _parse_wallclock(sent_dt)
+
+    # Rule 1 — literal midnight => app stamps submission time
+    if wall.time() == _time(0, 0, 0):
+        base = submitted_at or datetime.now(_ATHENS)
+        if isinstance(base, str):
+            base = _parse_aware_athens(base)
+        return base.astimezone(_ATHENS).replace(tzinfo=None), "MIDNIGHT->SUBMISSION_TIME"
+
+    # Rules 2 & 3 — respect the offset (naive = Athens) and convert to Athens
+    aware = _parse_aware_athens(sent_dt)
+    flavour = _offset_flavour(sent_dt)
+    rule = "NAIVE=ATHENS" if flavour == "NAIVE" else f"{flavour}->ATHENS"
+    return aware.astimezone(_ATHENS).replace(tzinfo=None), rule
+
+
+def verify_response_datetime_gr(sent_dt, resp_dt, max_minutes=10, submitted_at=None):
+    """Assert the response dateIssued matches the app's GR rules.
+
+    UAT observation (2026-07): the offset label on the response is not
+    reliable — /Receipt & 8.6 return Athens wall clock labelled 'Z', while
+    11.1 returns proper UTC '+00:00'. So the response is accepted if EITHER
+    interpretation matches the expected Athens time:
+      * aware:     parse with its offset and convert to Athens
+      * wallclock: take the digits as Athens time, ignore the label
+    The portal HTML check remains the strict authority on display.
+    """
+    max_minutes = float(max_minutes)
+    expected, rule = expected_athens_datetime(sent_dt, submitted_at)
+
+    aware = _parse_aware_athens(resp_dt).astimezone(_ATHENS).replace(tzinfo=None)
+    wall = _parse_wallclock(resp_dt)
+
+    diff_aware = abs((aware - expected).total_seconds()) / 60.0
+    diff_wall = abs((wall - expected).total_seconds()) / 60.0
+
+    if diff_aware <= max_minutes:
+        return (f"rule={rule} expected≈{expected:%H:%M:%S} response={resp_dt} "
+                f"[aware] diff={diff_aware:.2f}min")
+    if diff_wall <= max_minutes:
+        return (f"rule={rule} expected≈{expected:%H:%M:%S} response={resp_dt} "
+                f"[wallclock — offset label unreliable] diff={diff_wall:.2f}min")
+
+    raise AssertionError(
+        f"Response dateIssued wrong for rule [{rule}]: sent={sent_dt} "
+        f"expected≈{expected:%Y-%m-%d %H:%M:%S} (Athens) but response={resp_dt} "
+        f"(aware={aware:%H:%M:%S} diff {diff_aware:.1f}min / "
+        f"wallclock={wall:%H:%M:%S} diff {diff_wall:.1f}min; max {max_minutes})"
+    )
+
+
+def verify_html_datetime_gr(html, sent_dt, max_minutes=10, submitted_at=None):
+    """Assert the portal displays the CORRECT Greece local time for the
+    dateIssued that was sent, per the app's GR rules."""
+    max_minutes = float(max_minutes)
+    expected, rule = expected_athens_datetime(sent_dt, submitted_at)
+    parsed = _extract_html_datetime(html)
+    if parsed is None:
+        raise AssertionError(
+            "Could not find a dd/mm/yyyy HH:MM π.μ./μ.μ. "
+            "datetime in the portal HTML."
+        )
+    html_wc, raw = parsed
+    diff_min = abs((html_wc - expected).total_seconds()) / 60.0
+    if diff_min > max_minutes:
+        raise AssertionError(
+            f"Portal shows WRONG Greece time for rule [{rule}]: sent={sent_dt} "
+            f"expected≈{expected:%d/%m/%Y %H:%M} (Athens) but portal shows "
+            f"'{raw}', diff {diff_min:.2f} min (max {max_minutes})"
+        )
+    return f"rule={rule} expected≈{expected:%d/%m/%Y %H:%M} portal='{raw}' diff={diff_min:.2f}min"
+
+
 # ------------------------------------------------------------------ internals
+
+def _parse_aware_athens(dt_str):
+    """Parse an ISO datetime string to an AWARE datetime.
+    Naive strings (no offset) are interpreted as Europe/Athens local time."""
+    s = (dt_str or "").strip()
+    dt = datetime.fromisoformat(s.replace("Z", "+00:00"))
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=_ATHENS)
+    return dt
+
 
 def _offset_flavour(dt_str):
     """Classify the wire-format offset of an ISO datetime string."""
@@ -355,10 +493,12 @@ def _is_pm(meridiem):
 
 def _extract_html_datetime(html):
     html = html or ""
-    # Prefer bold cells (where the portal renders the issue datetime),
+    # Prefer bold cells (where the invoice portal renders the issue datetime),
     # fall back to scanning the whole document.
     candidates = _BOLD_CELL.findall(html)
     candidates.append(html)
+
+    # 1) Invoice portal: 12-hour with Greek meridiem
     for chunk in candidates:
         m = _HTML_DT.search(chunk)
         if not m:
@@ -374,5 +514,16 @@ def _extract_html_datetime(html):
             hour = 0
         dt = datetime(int(year), int(month), int(day), hour, minute, second)
         return dt, m.group(0).strip()
+
+    # 2) Receipt portal: 24-hour dd-mm-yyyy HH:MM:SS, no meridiem
+    for chunk in candidates:
+        m = _HTML_DT_24H.search(chunk)
+        if not m:
+            continue
+        day, month, year, hour, minute, second = m.groups()
+        dt = datetime(int(year), int(month), int(day),
+                      int(hour), int(minute), int(second) if second else 0)
+        return dt, m.group(0).strip()
+
     return None
 

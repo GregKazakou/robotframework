@@ -61,7 +61,7 @@ TC 07.2 - Mixed Complex Flow 11.4 Credit
 #TC 07.3 - Mixed Complex Flow 11.1 Debit
 #    [Documentation]    Το σύνθετο σενάριο με 9 βήματα (το τελευταίο είναι 11.1)
 #    Send 8.6 Debit     gross=10        # M1
-#    Send 8.6 Debit     gross=30        # M2
+#    Send 8.6 Debit    ${m2}     gross=30        # M2
 #    Send 8.6 Credit    gross=10        # M3
 #    Send 11.1 Debit    gross=20    expected_marks_count=3   peek=${True}    # connects [M1,M2,M3]
 #    Send 8.6 Debit     gross=30        # M4
@@ -144,37 +144,101 @@ TC 17 - Zero After Multiple Offsetting table Moves
     ...                άρα το μηδενικό 11.1 πρέπει επίσης να φέρει VatCategoryCode=2.
     ${m1}=    Send 8.6 Debit     gross=100    vat_rate=${13}
     ${m2}=    Send 11.1 Debit    ${m1}          gross=70    vat_rate=${13}
-    Sleep    1 minutes
+   # Sleep    1 minutes
     ${m3}=    Send 8.6 Credit    ${m1}          gross=70    vat_rate=${13}
-    Sleep    1 minutes
+  #  Sleep    1 minutes
     ${m4}=    Send 11.4 Credit   ${m1}    ${m3}    gross=70    vat_rate=${13}
     ${m5}=    Send 11.1 Debit    ${m1}    ${m3}    gross=30    vat_rate=${13}
     Sleep    1 minutes
     ${m6}=    Send 8.6 Credit    ${m1}          gross=30    vat_rate=${13}
     ${m7}=    Send 11.4 Credit   ${m1}    ${m6}    gross=30    vat_rate=${13}
 
- #TC 18 - Zero After Multiple Offsetting table Moves
-   # [Documentation]    Πολλαπλές κινήσεις που ακυρώνονται μεταξύ τους. Τα 8.6 είναι 13%,
-   # ...                άρα το μηδενικό 11.1 πρέπει επίσης να φέρει VatCategoryCode=2.
-   # ${m1}=    Send 8.6 Debit     gross=100    vat_rate=${13}
-   # ${m2}=    Send 11.1 Debit    ${m1}          gross=70    vat_rate=${13}
-   # ${m3}=    Send 8.6 Credit    ${m1}          gross=70    vat_rate=${13}
-   # ${m4}=    Send 11.4 Credit   ${m3}    gross=70    vat_rate=${13}
-   
-   # ${m5}=    Send 11.1 Debit    ${m3}    gross=30    vat_rate=${13}
- 
-   # ${m6}=    Send 8.6 Credit    ${m1}          gross=30    vat_rate=${13}
-   # ${m7}=    Send 11.4 Credit   ${m6}        gross=30    vat_rate=${13}  
-   # ${m8}=    Send 8.6 Debit      ${m1}             gross=80         vat_rate=${13}
-   # ${m9}=    Send 11.1 Debit    ${m1}     ${m8}     gross=80    vat_rate=${13}
-   # ${m10}=    Send 8.6 Credit    ${m1}          gross=80    vat_rate=${13}
+ TC 18 - Cross-Linked Marks Over Successive Rounds
+    [Documentation]    Πολλαπλές κινήσεις που ακυρώνονται μεταξύ τους. Τα 8.6 είναι 13%,
+    ...                άρα το μηδενικό 11.1 πρέπει επίσης να φέρει VatCategoryCode=2.
+    ${m1}=    Send 8.6 Debit     gross=100    vat_rate=${13}
+    ${m2}=    Send 11.1 Debit    ${m1}          gross=70    vat_rate=${13}
+    ${m3}=    Send 8.6 Credit    ${m1}          gross=70    vat_rate=${13}
+   # Sleep    1 minutes
+    ${m4}=    Send 11.4 Credit   ${m3}          gross=70    vat_rate=${13}
+    ${m5}=    Send 11.1 Debit    ${m3}          gross=30    vat_rate=${13}
+    ${m6}=    Send 8.6 Credit    ${m3}          gross=30    vat_rate=${13}
+   #  Sleep    1 minutes
+    ${m7}=    Send 11.4 Credit   ${m6}          gross=30    vat_rate=${13}  
+    ${m8}=    Send 8.6 Debit     ${m6}          gross=80    vat_rate=${13}
+   #  Sleep    1 minutes
+    ${m9}=    Send 11.1 Debit    ${m8}          gross=80    vat_rate=${13}
+    ${m10}=    Send 8.6 Credit    ${m8}         gross=80    vat_rate=${13}
+   #  Sleep    1 minutes
+    ${m11}=    Send 8.6 Debit     ${m10}         gross=20    vat_rate=${13}
+     Sleep    1 minutes
+    ${m12}=    Send 11.1 Debit    ${m11}         gross=20    vat_rate=${13}
+    ${m13}=    Send 8.6 Credit    ${m11}         gross=20    vat_rate=${13}
+    ${m14}=    Send 11.1 Debit    ${m13}         gross=20    vat_rate=${13}
+    ${m15}=    Send 8.6 Credit    ${m13}         gross=20    vat_rate=${13}
+
+ TC 19 - Cross-Linked Marks Over Successive Rounds
+    [Documentation]    Πολλαπλές κινήσεις που ακυρώνονται μεταξύ τους. Τα 8.6 είναι 13%,
+    ...                άρα το μηδενικό 11.1 πρέπει επίσης να φέρει VatCategoryCode=2.
+    ${m1}=    Send 8.6 Debit     gross=100    vat_rate=${13}
+    ${m2}=    Send 11.1 Debit    ${m1}          gross=70    vat_rate=${13}
+    ${m3}=    Send 11.1 Debit    ${m1}          gross=30    vat_rate=${13}
 
 *** Settings ***
-Documentation     FNB (Food & Beverage) Table Order Scenarios
-...               Ροή: 8.6 debit/credit/cancel -> MARKs συσσωρεύονται ανά τραπέζι.
-...               11.1 receipt κλείνει τα pending 8.6 MARKs μέσω multipleConnectedMarks.
-...               11.4 receipt είναι η retail πιστωτική (ίδιο schema με 11.1, διαφορετικός InvoiceTypeCode).
-...               Cancel 8.6 αφαιρεί MARKs από το pool και ΔΕΝ περιλαμβάνει ποσά (αλλά Quantity=1).
+Documentation     FNB (Food & Beverage) Table Order Scenarios — 8.6 Δελτίο Παραγγελίας Εστίασης
+...
+...               Υλοποίηση / mapping στο suite:
+...               - Send 8.6 Debit  = ΔΠΕ κανονικό πρόσημο (record_type_code=0)· MARK στο pool.
+...               - Send 8.6 Credit = ΔΠΕ αντίθετο πρόσημο / μερική ακύρωση (record_type_code=7).
+...               - Send 8.6 Cancel = «Καθολική Ακύρωση 8.6» (χωρίς αξία, Quantity=1)· αφαιρεί MARKs.
+...               - Send 11.1 Debit = ΑΛΠ που κλείνει τα pending 8.6 μέσω multipleConnectedMarks.
+...               - Send 11.4 Credit= Πιστωτικό Στοιχείο Λιανικής (ίδιο schema με 11.1, άλλος InvoiceTypeCode).
+...
+...               ==========================================================================
+...               ΚΑΝΟΝΕΣ ΚΛΕΙΣΙΜΑΤΟΣ 8.6 ΜΕ ΤΑ ΠΑΡΑΣΤΑΤΙΚΑ ΑΞΙΑΣ (myDATA)
+...               Α.1138/2020 όπως τροπ. με Α.1170/2023
+...               ==========================================================================
+...
+...               *1. Με ποια παραστατικά κλείνει το 8.6*
+...               Συσχετίζεται με παραστατικά αξίας που φέρουν ΥΠΟΧΡΕΩΤΙΚΑ την ένδειξη
+...               «Συναλλαγές Εστίασης»:
+...               - 11.1 ΑΛΠ .................. χρεωστικές λιανικής
+...               - 11.4 Πιστωτικό Στοιχείο Λιανικής .. πιστωτικές λιανικής (επιστροφές/διορθώσεις)
+...               - 1.1 Τιμολόγιο Πώλησης ..... χρεωστικές χονδρικής
+...               - 5.1 / 5.2 Πιστωτικά Τιμολόγια .... πιστωτικές χονδρικής
+...
+...               *2. Κανόνας ισότητας (προϋπόθεση συσχέτισης)*
+...               Η συσχέτιση νοείται ΜΟΝΟ όταν, ανά συναλλαγή εστίασης:
+...               άθροισμα καθαρών αξιών & ποσοτήτων ειδών του 8.6 = αντίστοιχο άθροισμα
+...               καθαρής/συνολικής αξίας & ποσοτήτων των συσχετιζόμενων χρεωστικών + πιστωτικών.
+...               Ελέγχεται ΚΑΙ σε αξία ΚΑΙ σε ποσότητα, με όρια στρογγυλοποίησης 0,10 λεπτά.
+...               (Γι' αυτό τα TC με gross=0: όταν 8.6 debit = 8.6 credit το άθροισμα μηδενίζεται.)
+...
+...               *3. Προθεσμία — 24 ώρες*
+...               - Εντός 24 ωρών από ημ/ώρα έκδοσης πρέπει να συσχετιστούν & κλείσουν τα ανοιχτά 8.6.
+...               - Αν μείνει ανοιχτό έστω ένα ΔΠΕ, ΔΕΝ επιτρέπονται επόμενες συναλλαγές εστίασης:
+...                 με ΦΗΜ διακοπή ανά ΦΗΜ· με Πάροχο διακοπή ανά Α/Α Εγκατάστασης.
+...               - Ετησίως: κλείσιμο όλων έως την υποβολή δήλωσης φορολογίας εισοδήματος.
+...
+...               *4. Ακυρώσεις παραγγελίας*
+...               - Καθολική: ένδειξη «Καθολική Ακύρωση 8.6» → κλείνει χωρίς περαιτέρω συσχέτιση.
+...               - Μερική: νέο 8.6 με αντίθετα πρόσημα (Rec Type 7) ανά είδος, εντός 24 ωρών,
+...                 μόνο για τα είδη που επιστρέφονται/διορθώνονται/κέρασμα/έκπτωση.
+...               - Κανονικά & αντίθετα (Rec Type 7) πρόσημα ΔΕΝ συμψηφίζονται στο ίδιο παραστατικό.
+...
+...               *5. Σειρά ενεργειών κλεισίματος (6 βήματα)*
+...               1. Έκδοση 8.6 με κανονικό πρόσημο για τα παραγγελθέντα είδη.
+...               2. Καθολική ακύρωση → «Καθολική Ακύρωση 8.6» εντός 24h (κλείνει).
+...               3. Μερική ακύρωση → 8.6 με Rec Type 7 (επιστροφή/διόρθωση/κέρασμα/έκπτωση).
+...               4. Συσχέτιση ειδών ώστε τα ακυρωμένα να ΜΗΝ ληφθούν υπόψη στο άθροισμα.
+...               5. Άθροιση ειδών/ποσοτήτων που έμειναν με κανονικό πρόσημο.
+...               6. Έκδοση ΑΛΠ/Τιμολογίου που κλείνει & συσχετίζει τα 8.6 (κανονικά + Rec Type 7).
+...               Εναλλακτικά, η μερική ακύρωση ολοκληρώνεται με Πιστωτικές Αποδείξεις Λιανικής (11.4).
+...
+...               *6. Υποχρεώσεις Παρόχου*
+...               Τεκμηριώνει ότι όλα τα ανοιχτά 8.6 συσχετίστηκαν εντός 24h, ότι τα παραστατικά αξίας
+...               φέρουν «Συναλλαγές Εστίασης (12)», και σε μη-κλεισμένο 8.6 διακόπτει τη διαβίβαση
+...               ανά Α/Α Εγκατάστασης.
 
 Library           RequestsLibrary
 Library           Collections
@@ -265,12 +329,15 @@ Reset Pending Marks Pool
 # ======================================================================
 
 Send 8.6 Debit
-    [Arguments]           ${gross}    ${vat_rate}=${DEFAULT_VAT_RATE}
+    [Arguments]           @{connects}    ${gross}    ${vat_rate}=${DEFAULT_VAT_RATE}
+    [Documentation]       Τα προαιρετικά positional MARKs (@{connects}) μπαίνουν στο
+    ...                   multipleConnectedMarks του request.
     ${payload}=           Copy Dictionary        ${TPL_8_6}    deepcopy=True
-    ${payload}=           Build 8 6 Payload      ${payload}    ${gross}    ${vat_rate}    record_type_code=${0}
+    ${payload}=           Build 8 6 Payload      ${payload}    ${gross}    ${vat_rate}
+    ...                                          record_type_code=${0}    marks=${connects}
     ${mark}=              POST 8.6 Document      ${payload}
     Append To List        ${PENDING_MARKS}       ${mark}
-    Log                   8.6 DEBIT gross=${gross} vat=${vat_rate}% -> MARK ${mark} | pool=${PENDING_MARKS}
+    Log                   8.6 DEBIT gross=${gross} vat=${vat_rate}% connects=${connects} -> MARK ${mark} | pool=${PENDING_MARKS}
     RETURN                ${mark}
 
 Send 8.6 Credit

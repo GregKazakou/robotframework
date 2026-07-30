@@ -20,6 +20,7 @@ jobs:
         Automation/Receipts_InternalID_Cases.robot
         Automation/DN Life Cycle.robot
         Automation/einvoicing_notifications.robot
+        Automation/dateIssued_matrix.robot
     steps:
       - uses: actions/checkout@v4
       - id: set
@@ -45,6 +46,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.discover.outputs.matrix) }}
+    env:
+      # Runners are UTC by default; dateIssued_matrix builds its naive
+      # datetime variants from the LOCAL wall clock, which must be Greece
+      # time (the app treats naive datetimes as Europe/Athens).
+      TZ: Europe/Athens
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -86,6 +92,9 @@ jobs:
           VALID_CELL       = "${NOTIF_VALID_CELL:-306912345678}"
           INVALID_CELL     = "12345"
           INVOICE_SEED     = "1"
+
+          # --- dateIssued_matrix suite ---
+          RECIPIENT_TIN    = "135952929"
 
           # --- DN Life Cycle suite ---
           UAT_API_KEY_RECIPIENT        = "${UAT_API_KEY_RECIPIENT}"

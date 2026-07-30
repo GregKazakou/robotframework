@@ -5,3 +5,4 @@ robotframework-requests
 requests
 robotframework-jsonlibrary       # για JSONLibrary, αν τη χρησιμοποιείς
 robotframework-datetime-tz        # αν χειρίζεσαι timezones
+tzdata                            # zoneinfo DB για Windows (Europe/Athens στο dateIssued_matrix)

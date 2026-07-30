@@ -1,5 +1,10 @@
 # Local credentials — never commit
 **/credentials.py
+**/credentials (*).py
+
+# Python bytecode (may embed credential values from credentials.py)
+__pycache__/
+*.pyc
 
 # Robot Framework results
 results/
@@ -7,3 +12,10 @@ log.html
 output.xml
 report.html
 *.xml
+Automation/Results/
+selenium-screenshot-*.png
+flow_results.csv
+
+# IDE / tool caches
+.vs/
+.robotcode_cache/
