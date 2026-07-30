@@ -31,19 +31,24 @@ jobs:
         env:
           HOTDOG_USER_EMAIL: ${{ secrets.HOTDOG_USER_EMAIL }}
           HOTDOG_PASSWORD: ${{ secrets.HOTDOG_PASSWORD }}
+          HOTDOG_COMPANY_TIN: ${{ secrets.HOTDOG_COMPANY_TIN }}
+          HOTDOG_NEW_USER_NAME: ${{ secrets.HOTDOG_NEW_USER_NAME }}
+          HOTDOG_NEW_USER_EMAIL: ${{ secrets.HOTDOG_NEW_USER_EMAIL }}
+          HOTDOG_COMPANY_NAME: ${{ secrets.HOTDOG_COMPANY_NAME }}
+          HOTDOG_EXPECTED_AADE_USER: ${{ secrets.HOTDOG_EXPECTED_AADE_USER }}
         run: |
           mkdir -p config
           cp config/credentials.example.py config/credentials.py
           cat >> config/credentials.py << EOF
 
-          # --- CI overrides (Hotdog UI suite) ---
+          # --- CI overrides (Hotdog UI suite) — all values from GitHub Secrets ---
           HOTDOG_USER_EMAIL          = "${HOTDOG_USER_EMAIL}"
           HOTDOG_PASSWORD            = "${HOTDOG_PASSWORD}"
-          HOTDOG_COMPANY_TIN         = "135952929"
-          HOTDOG_NEW_USER_NAME       = "Grigoris Kazakou"
-          HOTDOG_NEW_USER_EMAIL      = "gkazakou@impact.gr"
-          HOTDOG_COMPANY_NAME        = "LMC Demo"
-          HOTDOG_EXPECTED_AADE_USER  = "LMCNEW2025"
+          HOTDOG_COMPANY_TIN         = "${HOTDOG_COMPANY_TIN}"
+          HOTDOG_NEW_USER_NAME       = "${HOTDOG_NEW_USER_NAME}"
+          HOTDOG_NEW_USER_EMAIL      = "${HOTDOG_NEW_USER_EMAIL}"
+          HOTDOG_COMPANY_NAME        = "${HOTDOG_COMPANY_NAME}"
+          HOTDOG_EXPECTED_AADE_USER  = "${HOTDOG_EXPECTED_AADE_USER}"
           EOF
 
       - name: Run Robot Framework Tests
