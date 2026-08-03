@@ -94,7 +94,8 @@ jobs:
           INVALID_EMAIL    = "invalid-email-address"
           VALID_CELL       = "${NOTIF_VALID_CELL:-306912345678}"
           INVALID_CELL     = "12345"
-          INVOICE_SEED     = "1"
+          # unique/run seed -> αποφυγή HTTP 409 "already transmitted" σε επαναλήψεις
+          INVOICE_SEED     = str(int(__import__("time").time()))
 
           # --- Party TINs (dateIssued_matrix / DN Life Cycle) ---
           RECIPIENT_TIN    = "135952929"

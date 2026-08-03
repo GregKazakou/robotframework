@@ -379,6 +379,8 @@ Verify Submission Accepted
     ...    msg=[${endpoint}] Λείπει το 'uid' από την απάντηση: ${data}
 
     ${mark}=    Get From Dictionary    ${data}    mark
+    # Το 'mark' επιστρέφεται ως αριθμός στο JSON - μετατροπή σε string πριν το Should Not Be Empty.
+    ${mark}=    Convert To String    ${mark}
     Should Not Be Empty    ${mark}    msg=[${endpoint}] Το 'mark' είναι κενό.
     Run Keyword If    '${endpoint}' == 'deliverynote'
     ...    Set Suite Variable    ${LAST_MARK}    ${mark}
