@@ -48,6 +48,7 @@ Variables        ${EXECDIR}/config/credentials.py
 
 Suite Setup      Build Variant Matrix
 Test Template    Run Variant Case
+Test Teardown    Append Response Url To Message
 
 *** Variables ***
 ${DATA_DIR}           ${CURDIR}/Data
@@ -76,6 +77,10 @@ ${CHECK_FORMAT_ECHO}  ${False}
 ${COUNTERPARTY_VAT}   ${RECIPIENT_TIN}
 
 @{ALL_VARIANTS}       # populated by Suite Setup
+
+# Portal URL του τρέχοντος TC — γεμίζει από το Post Invoice And Verify
+${RESPONSE_URL}       ${EMPTY}
+${RESPONSE_MARK}      ${EMPTY}
 
 *** Test Cases ***
 # One test case per (template x dateIssued variant) so a failure pinpoints
@@ -356,6 +361,16 @@ Set Key If Present
 # POST + VERIFY
 # =============================================================================
 
+Append Response Url To Message
+    [Documentation]    Test Teardown: εμφανίζει το portal URL του response στο
+    ...                μήνυμα του test (report.html/log.html) — και σε PASS
+    ...                και σε FAIL — ως clickable link.
+    IF    '${RESPONSE_URL}' != '${EMPTY}'
+        Set Test Message    *HTML* <br>mark=${RESPONSE_MARK} · <a href="${RESPONSE_URL}">${RESPONSE_URL}</a>
+        ...    append=${True}
+    END
+
+
 Resolve Endpoint For Template
     [Documentation]    8.4 POS receipts go to /Receipt; everything else
     ...                (8.6 / 11.1 / 1.1) goes to /invoice/json.
@@ -390,6 +405,10 @@ Post Invoice And Verify
     ${mark}=     Get From Dictionary    ${body}    mark
     ${url}=      Get From Dictionary    ${body}    url
     ${message}=  Get From Dictionary    ${body}    message
+
+    # Κράτα τα για το Test Teardown ώστε να μπουν στο test message του report
+    Set Test Variable    ${RESPONSE_URL}     ${url}
+    Set Test Variable    ${RESPONSE_MARK}    ${mark}
 
     Save Response Result
     ...    status_code=${response.status_code}    mark=${mark}
