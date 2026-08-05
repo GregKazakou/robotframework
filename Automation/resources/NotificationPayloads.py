@@ -126,15 +126,21 @@ class NotificationPayloads:
 
     # ------------------------------------------------------- payload building
 
-    def _emails(self, include):
+    def _emails(self, include, mode="valid"):
         if not include:
             return None
-        return [self._cfg["validEmailAddress"], self._cfg["invalidEmailAddress"]]
+        if mode == "invalid":
+            # negative σενάριο: περιλαμβάνει άκυρη διεύθυνση -> αναμένεται HTTP 400
+            return [self._cfg["validEmailAddress"], self._cfg["invalidEmailAddress"]]
+        # θετικό σενάριο: ΜΟΝΟ έγκυρη διεύθυνση -> το παραστατικό γίνεται δεκτό & παραδίδεται
+        return [self._cfg["validEmailAddress"]]
 
-    def _cells(self, include):
+    def _cells(self, include, mode="valid"):
         if not include:
             return None
-        return [self._cfg["validCellphoneNumber"], self._cfg["invalidCellphoneNumber"]]
+        if mode == "invalid":
+            return [self._cfg["validCellphoneNumber"], self._cfg["invalidCellphoneNumber"]]
+        return [self._cfg["validCellphoneNumber"]]
 
     @keyword("Build Notification Payload")
     def build_notification_payload(
@@ -146,10 +152,14 @@ class NotificationPayloads:
         send_as_pdf=False,
         pdf_emails=True,
         notification_delay=0,
+        recipient_mode="valid",
     ):
         """Επιστρέφει το body για το δοσμένο endpoint/σενάριο.
 
         Για JSON endpoints επιστρέφει dict. Για grcore επιστρέφει string.
+
+        recipient_mode: 'valid' -> μόνο έγκυροι παραλήπτες (θετικό, παραδίδεται)
+                        'invalid' -> περιλαμβάνει άκυρο (negative, αναμένεται HTTP 400)
         """
         raw = self._substitute(self._load_template(endpoint))
 
@@ -165,7 +175,7 @@ class NotificationPayloads:
         body = json.loads(raw)
 
         if endpoint == "cancel_dn":
-            body["notificationEmails"] = self._emails(accounting_emails)
+            body["notificationEmails"] = self._emails(accounting_emails, recipient_mode)
             return body
 
         delay = int(notification_delay)
@@ -173,13 +183,13 @@ class NotificationPayloads:
         if endpoint == "jsonxml":
             # PascalCase + μειωμένο schema
             body["AdditionalDetails"] = {
-                "AccountingDepartmentEmails": self._emails(accounting_emails),
+                "AccountingDepartmentEmails": self._emails(accounting_emails, recipient_mode),
                 "TransmissionMethod": method,
                 "SendAsPdf": bool(send_as_pdf),
                 "AvoidEmailGrouping": False,
-                "PdfNotificationEmails": self._emails(pdf_emails),
+                "PdfNotificationEmails": self._emails(pdf_emails, recipient_mode),
                 # --- πεδία εκτός αρχικού schema ---
-                "CustomerCellNumbers": self._cells(customer_cells),
+                "CustomerCellNumbers": self._cells(customer_cells, recipient_mode),
                 "NotificationDelay": delay,
             }
         else:
@@ -191,12 +201,12 @@ class NotificationPayloads:
                 tags.append("PDF")
             body["AdditionalDetails"] = {
                 "TransmissionMethod": method,
-                "accountingDepartmentEmails": self._emails(accounting_emails),
+                "accountingDepartmentEmails": self._emails(accounting_emails, recipient_mode),
                 "documentTemplate": template_name,
                 "notificationDelay": delay,
-                "customerCellNumbers": self._cells(customer_cells),
+                "customerCellNumbers": self._cells(customer_cells, recipient_mode),
                 "sendAsPdf": bool(send_as_pdf),
-                "pdfNotificationEmails": self._emails(pdf_emails),
+                "pdfNotificationEmails": self._emails(pdf_emails, recipient_mode),
                 "DocumentTags": tags,
             }
 

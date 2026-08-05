@@ -89,10 +89,10 @@ jobs:
           # --- einvoicing_notifications suite ---
           API_KEY          = EINVOICE_API_KEY
           ISSUER_TIN       = "154697391"
-          COUNTERPARTY_TIN = "987654321"
-          VALID_EMAIL      = "${NOTIF_VALID_EMAIL:-accounting.valid@test-company.gr}"
+          COUNTERPARTY_TIN = "135952929"
+          VALID_EMAIL      = "${NOTIF_VALID_EMAIL:-gregkazakou@gmail.com}"
           INVALID_EMAIL    = "invalid-email-address"
-          VALID_CELL       = "${NOTIF_VALID_CELL:-306912345678}"
+          VALID_CELL       = "${NOTIF_VALID_CELL:-+306946692139}"
           INVALID_CELL     = "12345"
           # unique/run seed -> αποφυγή HTTP 409 "already transmitted" σε επαναλήψεις
           INVOICE_SEED     = str(int(__import__("time").time()))

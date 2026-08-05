@@ -278,7 +278,42 @@ GRCORE - TransmissionMethod C
     C
 
 # =========================================================================
-# 3.6  Cancel DeliveryNote - μόνο notificationEmails, ΜΕΡΙΚΗ κάλυψη
+# 3.6  NEGATIVE - άκυροι παραλήπτες ΠΡΕΠΕΙ να απορρίπτονται με HTTP 400
+#      Στέλνει παραστατικό που περιέχει άκυρο email/κινητό και επαληθεύει
+#      ότι το API το απορρίπτει (δεν παραδίδεται καμία ειδοποίηση).
+# =========================================================================
+NEG B2B JSON - Invalid Email Rejected
+    [Tags]    negative    b2b_json    email    expect400
+    [Template]    Submit Invalid Recipient Scenario
+    b2b_json    A    ${TRUE}    ${FALSE}
+
+NEG B2B JSON - Invalid Cell Rejected
+    [Tags]    negative    b2b_json    sms    expect400
+    [Template]    Submit Invalid Recipient Scenario
+    b2b_json    M    ${FALSE}    ${TRUE}
+
+NEG B2G JSON - Invalid Email Rejected
+    [Tags]    negative    b2g_json    email    expect400
+    [Template]    Submit Invalid Recipient Scenario
+    b2g_json    A    ${TRUE}    ${FALSE}
+
+NEG B2G JSON - Invalid Cell Rejected
+    [Tags]    negative    b2g_json    sms    expect400
+    [Template]    Submit Invalid Recipient Scenario
+    b2g_json    M    ${FALSE}    ${TRUE}
+
+NEG JSON+XML - Invalid Email Rejected
+    [Tags]    negative    jsonxml    email    expect400
+    [Template]    Submit Invalid Recipient Scenario
+    jsonxml    A    ${TRUE}    ${FALSE}
+
+NEG DeliveryNote - Invalid Email Rejected
+    [Tags]    negative    deliverynote    email    expect400
+    [Template]    Submit Invalid Recipient Scenario
+    deliverynote    A    ${TRUE}    ${FALSE}
+
+# =========================================================================
+# 3.7  Cancel DeliveryNote - μόνο notificationEmails, ΜΕΡΙΚΗ κάλυψη
 #      Απαιτεί mark από προηγούμενο DeliveryNote (γι' αυτό τρέχει τελευταίο).
 # =========================================================================
 Cancel DeliveryNote - Valid And Invalid Emails
@@ -335,6 +370,26 @@ Submit Notification Scenario
     ${resp}=    POST On Session    ${SESSION}    ${path}    json=${body}    expected_status=any
 
     Verify Submission Accepted    ${resp}    ${endpoint}
+
+Submit Invalid Recipient Scenario
+    [Documentation]    NEGATIVE: στέλνει παραστατικό με ΑΚΥΡΟ παραλήπτη (email ή SMS)
+    ...    και επαληθεύει ότι το API το ΑΠΟΡΡΙΠΤΕΙ με HTTP 400. Καμία ειδοποίηση δεν
+    ...    παραδίδεται. (Σε lenient περιβάλλον που αγνοεί το άκυρο, αυτό θα αποτύχει -
+    ...    και αυτό είναι έγκυρο εύρημα διαφοράς συμπεριφοράς.)
+    [Arguments]    ${endpoint}    ${method}    ${acct_emails}    ${cells}
+    ${body}=    Build Notification Payload
+    ...    endpoint=${endpoint}
+    ...    method=${method}
+    ...    accounting_emails=${acct_emails}
+    ...    customer_cells=${cells}
+    ...    recipient_mode=invalid
+    ${path}=    Get Endpoint Path    ${endpoint}
+    ${resp}=    POST On Session    ${SESSION}    ${path}    json=${body}    expected_status=any
+    Should Be Equal As Integers    ${resp.status_code}    400
+    ...    msg=[${endpoint}] Ανέμενα HTTP 400 (απόρριψη άκυρου παραλήπτη) αλλά πήρα ${resp.status_code}: ${resp.text}
+    Should Contain    ${resp.text}    Invalid
+    ...    msg=[${endpoint}] Η 400 απάντηση δεν αναφέρει 'Invalid': ${resp.text}
+    Log    NEGATIVE OK [${endpoint}] απορρίφθηκε σωστά: ${resp.text}    level=INFO
 
 Submit Grcore Scenario
     [Documentation]    Στέλνει GRCORE flat αρχείο. Μόνο το TransmissionMethod μεταβάλλεται.
