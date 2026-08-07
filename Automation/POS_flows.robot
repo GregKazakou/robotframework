@@ -122,6 +122,44 @@ TC 05 - Two 11.1 then signpos 8.4 then 8.4 receipt connected to both then valida
     # Step 5 - validate
     Validate Signpos    ${signpos.input}    ${signpos.signature}
 
+TC 06 - signpos 8.4 then 8.4 receipt then two 11.1 each connected to the 8.4 mark
+    [Documentation]    Αντίστροφη ροή του TC 05: πρώτα δημιουργείται το 8.4 με
+    ...                τα στοιχεία POS (signpos), και ΜΕΤΑ δύο 11.1 που το
+    ...                καθένα συσχετίζεται με το mark του 8.4 μέσω του
+    ...                multipleConnectedMarks. Το ποσό του 8.4 ισούται με το
+    ...                άθροισμα των δύο 11.1 (total_sum = 2 x AMOUNT_TOTAL).
+    [Tags]    flow_6    signpos    receipt    invoice    validate
+    Begin Case    F6
+    ${idn_pos}=  Next Identifier
+    ${idn_a}=    Next Identifier
+    ${idn_b}=    Next Identifier
+    ${total_sum}=    Evaluate    ${AMOUNT_TOTAL} * 2
+
+    # Step 1 - signpos with invoiceTypeCode 8.4 covering the combined amount
+    ${signpos_payload}=    Build Signpos Payload    8.4    ${idn_pos}    ${0}    ${total_sum}
+    ${signpos}=    Send And Verify    step1 signpos 8.4 sum    ${EP_SIGNPOS}    ${signpos_payload}    200
+    ...    require=signature,input
+
+    # Step 2 - 8.4 receipt with signpos payment details (no connected marks yet)
+    @{empty_marks}=    Create List
+    ${receipt_payload}=    Build Receipt 8 Payload    ${idn_pos}    ${signpos.signature}    ${signpos.input}    ${total_sum}    ${empty_marks}
+    ${receipt}=    Send And Verify    step2 receipt 8.4 with signpos    ${EP_RECEIPT}    ${receipt_payload}    201
+    ...    require=mark
+
+    # Step 3 - first 11.1 connected to the 8.4 mark
+    @{connected}=    Create List    ${receipt.mark}
+    ${inv_a_payload}=    Build Invoice 11 Payload    ${idn_a}    ${EMPTY}    ${EMPTY}    ${AMOUNT_TOTAL}    ${connected}
+    ${inv_a}=    Send And Verify    step3 invoice 11.1 #A connected to 8.4    ${EP_INVOICE}    ${inv_a_payload}    201
+    ...    require=mark
+
+    # Step 4 - second 11.1 connected to the same 8.4 mark
+    ${inv_b_payload}=    Build Invoice 11 Payload    ${idn_b}    ${EMPTY}    ${EMPTY}    ${AMOUNT_TOTAL}    ${connected}
+    ${inv_b}=    Send And Verify    step4 invoice 11.1 #B connected to 8.4    ${EP_INVOICE}    ${inv_b_payload}    201
+    ...    require=mark
+
+    # Step 5 - validate
+    Validate Signpos    ${signpos.input}    ${signpos.signature}
+
 
 *** Settings ***
 Documentation     Multi-step API flow tests for the einvoice UAT environment.
@@ -139,6 +177,10 @@ Documentation     Multi-step API flow tests for the einvoice UAT environment.
 ...               Flow 5: 11.1 (x2) -> signpos with invoiceTypeCode 8.4 (sum amount)
 ...                       -> 8.4 receipt with signpos payment and the two 11.1 marks
 ...                          in multipleConnectedMarks -> validate
+...               Flow 6: signpos 8.4 (sum amount) -> 8.4 receipt with signpos
+...                       payment -> two 11.1, each with the 8.4 mark in
+...                          multipleConnectedMarks -> validate
+...                       (reverse of Flow 5; 8.4 amount = 2 x 11.1 amount)
 
 Library           helpers.py    WITH NAME    api
 Library           Collections
