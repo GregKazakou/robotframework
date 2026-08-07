@@ -308,6 +308,81 @@ def deep_merge(base: Dict[str, Any], overrides: Dict[str, Any]) -> Dict[str, Any
     return out
 
 
+def apply_unique_fields(payload: Dict[str, Any], prefix: str = "EX") -> Dict[str, Any]:
+    """Return a copy of `payload` with unique identifiers, so the same example
+    JSON can be POSTed repeatedly without duplicate-document rejections.
+
+    Only keys that ALREADY exist in the payload are touched (both camelCase
+    and PascalCase), so it is safe on any template:
+      * Series / series           -> {prefix}-<timestamp>
+      * Number / number / aa       -> <timestamp>
+      * dateIssued / DateIssued / issueDate -> today (YYYY-MM-DD)
+      * providerSignatureIdentifier / internalDocumentId / InternalDocumentId
+        and DistributionDetails.InternalDocumentId -> fresh uuid4
+    """
+    import datetime
+    import uuid
+
+    new = copy.deepcopy(payload)
+    now = datetime.datetime.now()
+    stamp = now.strftime("%y%m%d%H%M%S") + f"{now.microsecond // 1000:03d}"
+    series = f"{prefix}-{stamp}"
+    today = now.strftime("%Y-%m-%d")
+    guid = str(uuid.uuid4())
+
+    def set_if_present(d: Dict[str, Any], key: str, value: Any) -> None:
+        if isinstance(d, dict) and key in d:
+            d[key] = value
+
+    for k in ("Series", "series"):
+        set_if_present(new, k, series)
+    for k in ("Number", "number", "aa"):
+        set_if_present(new, k, stamp)
+    for k in ("dateIssued", "DateIssued", "issueDate"):
+        set_if_present(new, k, today)
+    for k in ("providerSignatureIdentifier", "ProviderSignatureIdentifier",
+              "internalDocumentId", "InternalDocumentId"):
+        set_if_present(new, k, guid)
+
+    dist = new.get("DistributionDetails")
+    if isinstance(dist, dict) and "InternalDocumentId" in dist:
+        dist["InternalDocumentId"] = guid
+
+    return new
+
+
+def parse_json(text: str) -> Dict[str, Any]:
+    """Parse a JSON string into a dict (for inline examples in .robot files)."""
+    return json.loads(text)
+
+
+def set_party_vats(payload: Dict[str, Any],
+                   issuer_vat: Optional[str] = None,
+                   counterparty_vat: Optional[str] = None) -> Dict[str, Any]:
+    """Return a copy with the Issuer / CounterParty VAT replaced by the given
+    values, but ONLY where such a key already exists (any casing / naming:
+    Vat, vat, vatNumber). Templates ship placeholders like "IssuerVat" that
+    the invoice endpoints reject with "Authentication failed" unless replaced
+    by the authenticated entity's VAT.
+    """
+    new = copy.deepcopy(payload)
+
+    def set_vat(container_keys, vat):
+        if not vat:
+            return
+        for ck in container_keys:
+            party = new.get(ck)
+            if isinstance(party, dict):
+                for vk in ("Vat", "vat", "vatNumber", "VatNumber"):
+                    if vk in party:
+                        party[vk] = vat
+
+    set_vat(("Issuer", "issuer"), issuer_vat)
+    set_vat(("CounterParty", "counterParty", "Counterpart", "counterpart"),
+            counterparty_vat)
+    return new
+
+
 def _deep_merge_inplace(dst: Dict[str, Any], src: Dict[str, Any]) -> None:
     for k, v in src.items():
         if isinstance(v, dict) and isinstance(dst.get(k), dict):
