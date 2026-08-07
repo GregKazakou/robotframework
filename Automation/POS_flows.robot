@@ -146,15 +146,16 @@ TC 06 - signpos 8.4 then 8.4 receipt then two 11.1 each connected to the 8.4 mar
     ${receipt}=    Send And Verify    step2 receipt 8.4 with signpos    ${EP_RECEIPT}    ${receipt_payload}    201
     ...    require=mark
 
-    # Step 3 - first 11.1 connected to the 8.4 mark
+    # Step 3 - first 11.1 ΕΠΙ ΠΙΣΤΩΣΕΙ, connected to the 8.4 mark
+    #          (τα POS data ζουν ΜΟΝΟ στο 8.4· το 11.1 είναι code 5)
     @{connected}=    Create List    ${receipt.mark}
-    ${inv_a_payload}=    Build Invoice 11 Payload    ${idn_a}    ${EMPTY}    ${EMPTY}    ${AMOUNT_TOTAL}    ${connected}
-    ${inv_a}=    Send And Verify    step3 invoice 11.1 #A connected to 8.4    ${EP_INVOICE}    ${inv_a_payload}    201
+    ${inv_a_payload}=    Build Invoice 11 Payload    ${idn_a}    ${EMPTY}    ${EMPTY}    ${AMOUNT_TOTAL}    ${connected}    on_credit=${True}
+    ${inv_a}=    Send And Verify    step3 invoice 11.1 #A on-credit connected to 8.4    ${EP_INVOICE}    ${inv_a_payload}    201
     ...    require=mark
 
-    # Step 4 - second 11.1 connected to the same 8.4 mark
-    ${inv_b_payload}=    Build Invoice 11 Payload    ${idn_b}    ${EMPTY}    ${EMPTY}    ${AMOUNT_TOTAL}    ${connected}
-    ${inv_b}=    Send And Verify    step4 invoice 11.1 #B connected to 8.4    ${EP_INVOICE}    ${inv_b_payload}    201
+    # Step 4 - second 11.1 ΕΠΙ ΠΙΣΤΩΣΕΙ, connected to the same 8.4 mark
+    ${inv_b_payload}=    Build Invoice 11 Payload    ${idn_b}    ${EMPTY}    ${EMPTY}    ${AMOUNT_TOTAL}    ${connected}    on_credit=${True}
+    ${inv_b}=    Send And Verify    step4 invoice 11.1 #B on-credit connected to 8.4    ${EP_INVOICE}    ${inv_b_payload}    201
     ...    require=mark
 
     # Step 5 - validate
@@ -363,7 +364,13 @@ Build Invoice 11 Payload
     ...                auto-tags its invoices with its own scenario id (F1..F5).
     ...                Pass an explicit value to override, e.g.
     ...                "Flow1_signpos_invoice_validate".
-    [Arguments]    ${identifier}    ${signature}    ${input}    ${amount}    ${multiple_connected}    ${erp_tag}=${EMPTY}
+    ...
+    ...                ${on_credit}=${True}: το 11.1 εκδίδεται ΕΠΙ ΠΙΣΤΩΣΕΙ
+    ...                (paymentMethodTypeCode 5) ΧΩΡΙΣ κανένα POS στοιχείο —
+    ...                για ροές όπου η πληρωμή καταγράφεται στο συνδεδεμένο 8.4
+    ...                receipt (multipleConnectedMarks). Τα signature/input
+    ...                αγνοούνται σε αυτή την περίπτωση.
+    [Arguments]    ${identifier}    ${signature}    ${input}    ${amount}    ${multiple_connected}    ${erp_tag}=${EMPTY}    ${on_credit}=${False}
     IF    '${erp_tag}' == ''
         ${effective_tag}=    Set Variable    ${CASE_ID}
     ELSE
@@ -372,16 +379,26 @@ Build Invoice 11 Payload
 
     ${net}    ${vat}=    Split Amount Net Vat    ${amount}
 
-    ${pm}=    Create Dictionary
-    ...    PaymentMethodType=Credit Card
-    ...    PaymentMethodTypeCode=${7}
-    ...    Amount=${amount}
-    ...    tipAmount=${0}
-    ...    transactionId=tr1.AUTOTEST.${identifier}
-    ...    providersSignature=${signature}
-    ...    posInput=${input}
-    ...    terminalId=${TERMINAL_ID}
-    ...    remarks=POS Credit Card
+    IF    ${on_credit}
+        # Επί πιστώσει (code 5) — καθόλου POS data (terminal/signature/transaction)
+        ${pm}=    Create Dictionary
+        ...    PaymentMethodType=On Credit
+        ...    PaymentMethodTypeCode=${5}
+        ...    Amount=${amount}
+        ...    tipAmount=${0}
+        ...    remarks=On Credit (paid via connected 8.4)
+    ELSE
+        ${pm}=    Create Dictionary
+        ...    PaymentMethodType=Credit Card
+        ...    PaymentMethodTypeCode=${7}
+        ...    Amount=${amount}
+        ...    tipAmount=${0}
+        ...    transactionId=tr1.AUTOTEST.${identifier}
+        ...    providersSignature=${signature}
+        ...    posInput=${input}
+        ...    terminalId=${TERMINAL_ID}
+        ...    remarks=POS Credit Card
+    END
     @{payment_methods}=    Create List    ${pm}
 
     ${PaymentDetails}=    Create Dictionary    exchangeCurrencyRate=${1.0}    PaymentMethods=${payment_methods}
