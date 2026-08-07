@@ -109,6 +109,7 @@ def _network_error_dict(path: str, payload: Dict[str, Any],
         "input": "",
         "internal_id": payload.get("internalDocumentId", ""),
         "server_series": payload.get("series", ""),
+        "url": "",
         "summary": msg,
         "raw_text": "",
         "body_dict": {},
@@ -139,6 +140,15 @@ def _parse_response(path: str, response: requests.Response,
 
     internal_id_returned = body.get("internalId") or ""
     server_series = body.get("series") or ""
+    url = body.get("url") or ""
+
+    # Collect API error details (400s often carry 'errors' with empty 'message')
+    errors = body.get("errors")
+    if not message and errors:
+        if isinstance(errors, list):
+            message = "; ".join(str(e) for e in errors[:3])
+        else:
+            message = str(errors)
 
     parts: List[str] = []
     if success is not None:
@@ -177,6 +187,7 @@ def _parse_response(path: str, response: requests.Response,
         "input": input_field,
         "internal_id": internal_id_returned,
         "server_series": server_series,
+        "url": url,
         "summary": " | ".join(parts),
         "raw_text": response.text,
         "body_dict": body,
@@ -191,6 +202,53 @@ def _nested(d: Any, path: List[str]) -> Any:
         else:
             return None
     return cur
+
+
+def verify_body(api: Dict[str, Any], expected_status, require: str = "") -> str:
+    """Assert the response BODY is consistent with the expected outcome.
+
+    For expected 2xx/3xx:
+      * non-empty body must be valid JSON
+      * body.success (when the endpoint returns it) must be true
+      * every field named in `require` (comma-separated, e.g. "mark" or
+        "signature,input") must be present and non-empty
+    For expected 4xx/5xx:
+      * body.success (when present) must NOT be true
+
+    Raises AssertionError listing every problem found; returns a short
+    "body OK" note otherwise.
+    """
+    problems: List[str] = []
+    expected_i = int(expected_status)
+    body = api.get("body_dict") or {}
+    raw = (api.get("raw_text") or "").strip()
+    success = api.get("success")
+
+    if expected_i < 400:
+        if raw and not body:
+            problems.append(f"body is not valid JSON: {raw[:100]}")
+        if success is not None and success is not True:
+            problems.append(
+                f'body.success={success} (expected true), msg="{api.get("message", "")}"'
+            )
+        checked = []
+        for field in [f.strip() for f in (require or "").split(",") if f.strip()]:
+            checked.append(field)
+            value = api.get(field)
+            if value is None:
+                value = body.get(field)
+            if not value:
+                problems.append(f"required response field '{field}' is missing/empty")
+    else:
+        checked = []
+        if success is True:
+            problems.append("body.success=true although an error response was expected")
+
+    if problems:
+        raise AssertionError("response body check failed: " + "; ".join(problems))
+
+    what = "success flag" + (f" + {', '.join(checked)}" if checked else "")
+    return f"body OK ({what})"
 
 
 # --------------------------------------------------------------------------- #
@@ -289,6 +347,7 @@ def make_row_dict(case_id, step, label, expected, actual, api,
         "message": api.get("message", ""),
         "mark": api.get("mark", ""),
         "uid": api.get("uid", ""),
+        "url": api.get("url", ""),
         "signature_short": (str(api.get("signature", "") or "")[:24]),
     }
 
@@ -326,7 +385,7 @@ def write_results_csv(rows: List[Dict[str, Any]], path: str) -> None:
     fields = [
         "verdict", "case_id", "step", "label", "endpoint",
         "expected", "actual", "success", "message", "mark", "uid",
-        "signature_short",
+        "url", "signature_short",
     ]
     with open(path, "w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=fields)

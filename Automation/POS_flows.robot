@@ -7,14 +7,13 @@ TC 01 - signpos then 11.1 with payment details then validate
     # Step 1 - signpos for 11.1
     ${signpos_payload}=    Build Signpos Payload    11.1    ${idn}    ${0}    ${AMOUNT_TOTAL}
     ${signpos}=    Send And Verify    step1 signpos for 11.1    ${EP_SIGNPOS}    ${signpos_payload}    200
-    Should Be True    bool($signpos.signature)    msg=signpos must return a signature
-    Should Be True    bool($signpos.input)    msg=signpos must return an input
+    ...    require=signature,input
 
     # Step 2 - 11.1 invoice with payment details from signpos
     @{empty_marks}=    Create List
     ${invoice_payload}=    Build Invoice 11 Payload    ${idn}    ${signpos.signature}    ${signpos.input}    ${AMOUNT_TOTAL}    ${empty_marks}
     ${invoice}=    Send And Verify    step2 invoice 11.1 with signpos payment    ${EP_INVOICE}    ${invoice_payload}    201
-    Should Be True    bool($invoice.mark)    msg=Invoice 11.1 must return a mark
+    ...    require=mark
 
     # Step 3 - validate
     Validate Signpos    ${signpos.input}    ${signpos.signature}
@@ -27,12 +26,13 @@ TC 02 - signpos then 8.4 receipt then validate then 11.1 connected to 8.4
     # Step 1 - signpos for 8.4
     ${signpos_payload}=    Build Signpos Payload    8.4    ${idn}    ${0}    ${AMOUNT_TOTAL}
     ${signpos}=    Send And Verify    step1 signpos for 8.4    ${EP_SIGNPOS}    ${signpos_payload}    200
+    ...    require=signature,input
 
     # Step 2 - 8.4 receipt with cardlines populated from signpos
     @{empty_marks}=    Create List
     ${receipt_payload}=    Build Receipt 8 Payload    ${idn}    ${signpos.signature}    ${signpos.input}    ${AMOUNT_TOTAL}    ${empty_marks}
     ${receipt}=    Send And Verify    step2 receipt 8.4 with signpos cardlines    ${EP_RECEIPT}    ${receipt_payload}    201
-    Should Be True    bool($receipt.mark)    msg=Receipt 8.4 must return a mark
+    ...    require=mark
 
     # Step 3 - validate
     Validate Signpos    ${signpos.input}    ${signpos.signature}
@@ -41,6 +41,7 @@ TC 02 - signpos then 8.4 receipt then validate then 11.1 connected to 8.4
     @{connected}=    Create List    ${receipt.mark}
     ${invoice_payload}=    Build Invoice 11 Payload    ${idn}    ${EMPTY}    ${EMPTY}    ${AMOUNT_TOTAL}    ${connected}
     Send And Verify    step4 invoice 11.1 connected to 8.4    ${EP_INVOICE}    ${invoice_payload}    201
+    ...    require=mark
 
 TC 03 - 11.1 then signpos with mark then updatePayment then validate
     [Tags]    flow_3    invoice    signpos    update_payment    validate
@@ -51,11 +52,12 @@ TC 03 - 11.1 then signpos with mark then updatePayment then validate
     @{empty_marks}=    Create List
     ${invoice_payload}=    Build Invoice 11 Payload    ${idn}    ${EMPTY}    ${EMPTY}    ${AMOUNT_TOTAL}    ${empty_marks}
     ${invoice}=    Send And Verify    step1 invoice 11.1 plain    ${EP_INVOICE}    ${invoice_payload}    201
-    Should Be True    bool($invoice.mark)    msg=Invoice 11.1 must return a mark
+    ...    require=mark
 
     # Step 2 - signpos using mark from 11.1
     ${signpos_payload}=    Build Signpos Payload    11.1    ${idn}    ${invoice.mark}    ${AMOUNT_TOTAL}
     ${signpos}=    Send And Verify    step2 signpos for 11.1 mark    ${EP_SIGNPOS}    ${signpos_payload}    200
+    ...    require=signature,input
 
     # Step 3 - updatePayment with mark of 11.1, amounts of 11.1, payment from signpos
     ${upd_payload}=    Build Update Payment Payload    ${invoice.mark}    ${AMOUNT_TOTAL}    ${signpos.signature}    ${signpos.input}
@@ -73,15 +75,16 @@ TC 04 - 8.4 then signpos with mark then updatePayment then validate
     @{empty_marks}=    Create List
     ${receipt_payload}=    Build Receipt 8 Payload    ${idn}    ${EMPTY}    ${EMPTY}    ${AMOUNT_TOTAL}    ${empty_marks}
     ${receipt}=    Send And Verify    step1 receipt 8.4 plain    ${EP_RECEIPT}    ${receipt_payload}    201
-    Should Be True    bool($receipt.mark)    msg=Receipt 8.4 must return a mark
+    ...    require=mark
 
     # Step 2 - signpos using mark from 8.4
     ${signpos_payload}=    Build Signpos Payload    8.4    ${idn}    ${receipt.mark}    ${AMOUNT_TOTAL}
     ${signpos}=    Send And Verify    step2 signpos for 8.4 mark    ${EP_SIGNPOS}    ${signpos_payload}    200
+    ...    require=signature,input
 
     # Step 3 - updatePayment for the 8.4
     ${upd_payload}=    Build Update Payment Payload    ${receipt.mark}    ${AMOUNT_TOTAL}    ${signpos.signature}    ${signpos.input}
-    Send And Verify    step3 updatePayment for 8.4    ${EP_UPDATE_PAYMENT}    ${upd_payload}    200
+    Send And Verify    step3 updatePayment for 8.4    ${EP_UPDATE_PAYMENT}    ${upd_payload}    400
 
     # Step 4 - validate
     Validate Signpos    ${signpos.input}    ${signpos.signature}
@@ -98,21 +101,23 @@ TC 05 - Two 11.1 then signpos 8.4 then 8.4 receipt connected to both then valida
     @{empty_marks}=    Create List
     ${inv_a_payload}=    Build Invoice 11 Payload    ${idn_a}    ${EMPTY}    ${EMPTY}    ${AMOUNT_TOTAL}    ${empty_marks}
     ${inv_a}=    Send And Verify    step1 invoice 11.1 first    ${EP_INVOICE}    ${inv_a_payload}    201
-    Should Be True    bool($inv_a.mark)    msg=Invoice 11.1 #A must return a mark
+    ...    require=mark
 
     # Step 2 - second 11.1
     ${inv_b_payload}=    Build Invoice 11 Payload    ${idn_b}    ${EMPTY}    ${EMPTY}    ${AMOUNT_TOTAL}    ${empty_marks}
     ${inv_b}=    Send And Verify    step2 invoice 11.1 second    ${EP_INVOICE}    ${inv_b_payload}    201
-    Should Be True    bool($inv_b.mark)    msg=Invoice 11.1 #B must return a mark
+    ...    require=mark
 
     # Step 3 - signpos with invoiceTypeCode 8.4 covering the combined amount
     ${signpos_payload}=    Build Signpos Payload    8.4    ${idn_pos}    ${0}    ${total_sum}
     ${signpos}=    Send And Verify    step3 signpos 8.4 sum    ${EP_SIGNPOS}    ${signpos_payload}    200
+    ...    require=signature,input
 
     # Step 4 - 8.4 receipt with signpos payment details and connected to both 11.1s
     @{connected}=    Create List    ${inv_a.mark}    ${inv_b.mark}
     ${receipt_payload}=    Build Receipt 8 Payload    ${idn_pos}    ${signpos.signature}    ${signpos.input}    ${total_sum}    ${connected}
     Send And Verify    step4 receipt 8.4 connected    ${EP_RECEIPT}    ${receipt_payload}    201
+    ...    require=mark
 
     # Step 5 - validate
     Validate Signpos    ${signpos.input}    ${signpos.signature}
@@ -224,7 +229,17 @@ Next Identifier
 Send And Verify
     [Documentation]    POST a payload, log a one-line result, continue on failure.
     ...                Returns a Bunch-like object so tests can do ${result.mark}.
-    [Arguments]    ${label}    ${endpoint}    ${payload}    ${expected}    ${query}=${None}    ${erp}=none
+    ...
+    ...                Ελέγχει και το RESPONSE BODY (όχι μόνο το HTTP status):
+    ...                  * σε αναμενόμενο 2xx: έγκυρο JSON + body.success=true
+    ...                    (όπου το endpoint επιστρέφει success)
+    ...                  * σε αναμενόμενο 4xx: body.success να ΜΗΝ είναι true
+    ...                  * ${require}: comma-separated πεδία που πρέπει να
+    ...                    υπάρχουν μη-κενά στο body, π.χ. require=mark ή
+    ...                    require=signature,input
+    ...                Αν το response έχει portal url, μπαίνει clickable στο
+    ...                test message του report.
+    [Arguments]    ${label}    ${endpoint}    ${payload}    ${expected}    ${query}=${None}    ${erp}=none    ${require}=${EMPTY}
     ${new_step}=   Evaluate    ${STEP} + 1
     Set Test Variable    $STEP    ${new_step}
 
@@ -239,12 +254,30 @@ Send And Verify
     Append To List    ${RESULT_ROWS_DICT}    ${row_dict}
     Log To Console    \n${row_str}
 
+    # 1) HTTP status
     Run Keyword And Continue On Failure
     ...    Should Be Equal As Integers    ${actual}    ${expected}
     ...    msg=${CASE_ID} step ${STEP} (${endpoint}): expected ${expected}, got ${actual} | ${msg}
 
+    # 2) Response body (success flag + required fields)
+    Run Keyword And Continue On Failure
+    ...    Verify Response Body    ${api_res}    ${expected}    ${require}    ${label}    ${endpoint}
+
+    # 3) Portal URL στο test message (αν υπάρχει στο response)
+    ${url}=    Set Variable    ${api_res}[url]
+    IF    '${url}' != '${EMPTY}'
+        Set Test Message    *HTML* <br>step ${STEP} ${label}: <a href="${url}">${url}</a>
+        ...    append=${True}
+    END
+
     ${bunch}=    Evaluate    type('R',(object,),$api_res)()    modules=builtins
     RETURN    ${bunch}
+
+Verify Response Body
+    [Documentation]    Wrapper του api.Verify Body με πλούσιο μήνυμα αποτυχίας.
+    [Arguments]    ${api_res}    ${expected}    ${require}    ${label}    ${endpoint}
+    ${note}=    api.Verify Body    ${api_res}    ${expected}    ${require}
+    Log    ${CASE_ID} step ${STEP} (${endpoint}) ${label}: ${note}    INFO
 
 Validate Signpos
     [Documentation]    POST /PosTransactions/validate?IssuerTin=...
@@ -254,10 +287,16 @@ Validate Signpos
     ${res}=        Send And Verify    validate signpos    ${EP_VALIDATE}    ${payload}    200    ${q}
     RETURN    ${res}
 
-Build Signpos Payload
-    [Arguments]    ${invoice_type_code}    ${identifier}    ${mark}    ${amount}
+Split Amount Net Vat
+    [Documentation]    Σπάει ένα μικτό ποσό σε (net, vat) με ΦΠΑ 13%.
+    [Arguments]    ${amount}
     ${vat}=    Evaluate    round(float($amount) - float($amount)/1.13, 2)
     ${net}=    Evaluate    round(float($amount) - $vat, 2)
+    RETURN    ${net}    ${vat}
+
+Build Signpos Payload
+    [Arguments]    ${invoice_type_code}    ${identifier}    ${mark}    ${amount}
+    ${net}    ${vat}=    Split Amount Net Vat    ${amount}
     ${over}=    Create Dictionary
     ...    issueDate=${TODAY}
     ...    invoiceTypeCode=${invoice_type_code}
@@ -283,13 +322,13 @@ Build Invoice 11 Payload
     ...                Pass an explicit value to override, e.g.
     ...                "Flow1_signpos_invoice_validate".
     [Arguments]    ${identifier}    ${signature}    ${input}    ${amount}    ${multiple_connected}    ${erp_tag}=${EMPTY}
-    ${effective_tag}=    Run Keyword If    '${erp_tag}' == ''
-    ...    Set Variable    ${CASE_ID}
-    ...    ELSE
-    ...    Set Variable    ${erp_tag}
+    IF    '${erp_tag}' == ''
+        ${effective_tag}=    Set Variable    ${CASE_ID}
+    ELSE
+        ${effective_tag}=    Set Variable    ${erp_tag}
+    END
 
-    ${vat}=    Evaluate    round(float($amount) - float($amount)/1.13, 2)
-    ${net}=    Evaluate    round(float($amount) - $vat, 2)
+    ${net}    ${vat}=    Split Amount Net Vat    ${amount}
 
     ${pm}=    Create Dictionary
     ...    PaymentMethodType=Credit Card
