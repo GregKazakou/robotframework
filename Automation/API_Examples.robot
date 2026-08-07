@@ -60,16 +60,37 @@ ${EP_UPDATE_PAYMENT}   /Invoice/updatePayment
 
 *** Test Cases ***                     JSON_FILE                              ENDPOINT         EXPECTED    REQUIRE
 # ── Έτοιμα παραδείγματα (αντέγραψε μία γραμμή για νέο) ─────────────────────────
-1.1 B2B invoice                        1.1_B2B.json                           ${EP_INVOICE}    201         mark
+1.1 B2B invoice Generic                1.1_B2B.json                           ${EP_INVOICE}    201         mark
     [Tags]    invoice    b2b
-8.4 POS receipt                        8.4_POS_Receipt.json                   ${EP_RECEIPT}    201         mark
+8.4 POS receipt Generic                       8.4_POS_Receipt.json                   ${EP_RECEIPT}    201         mark
     [Tags]    receipt    pos
-11.1 retail sales                      11.1_FNB_Retail_Sales_Receipt.json     ${EP_INVOICE}    201         mark
+11.1 retail sales Generic                      11.1_FNB_Retail_Sales_Receipt.json     ${EP_INVOICE}    201         mark
     [Tags]    invoice    retail
-8.6 debit FNB form                     8.6_Debit_FNB_Form.json                ${EP_INVOICE}    201         mark
+8.6 debit FNB form Generic                      8.6_Debit_FNB_Form.json                ${EP_INVOICE}    201         mark
     [Tags]    invoice    fnb
 
+1.1 B2G invoice Generic                     1.1_B2G.json                           ${EP_INVOICE}    201         mark
+    [Tags]    invoice    b2g    
 # ↓↓↓ Πρόσθεσε τα δικά σου παραδείγματα εδώ (json στο Automation/Data/) ↓↓↓
+
+
+# ── Fuel invoice: myDATA 229 ανοχή απόκλισης ΦΠΑ ανά γραμμή ───────────────────
+#    Έλεγχος per-line ≤ 1.00 EUR (declared vatAmount vs net × συντελεστή).
+#    [Template] NONE γιατί το negative test επιβεβαιώνει ΕΙΔΙΚΑ το σφάλμα 229,
+#    όχι οποιοδήποτε 400.
+FUEL - per-line VAT deviation 1.01 EUR -> 400 (myDATA 229)
+    [Template]    NONE
+    [Tags]        invoice    fuel    negative
+    ${res}=    Run Example From File    1.1_B2B_FUEL_FAIL.json    ${EP_INVOICE}    400
+    Should Contain    ${res.raw_text}    <code>229</code>
+    ...    msg=Περίμενα myDATA ValidationError 229 (per-line vatAmount απόκλιση), got: ${res.message}
+    Should Contain    ${res.message}    invoice line: 3
+    ...    msg=Η απόκλιση 1.01 EUR είναι στη γραμμή 3 (fuelCode 30)
+
+FUEL - per-line VAT deviation 1.00 EUR -> 201 (within tolerance)
+    [Template]    NONE
+    [Tags]        invoice    fuel
+    Run Example From File    1.1_B2B_FUEL_PASS.json    ${EP_INVOICE}    201    require=mark
 
 
 # ── Inline παράδειγμα (χτίζεις το JSON στο test, χωρίς νέο αρχείο) ─────────────
@@ -114,7 +135,8 @@ Run Example From File
         ${payload}=    api.Apply Unique Fields    ${payload}    EX
     END
     ${payload}=    api.Set Party Vats    ${payload}    ${ISSUER_VAT}    ${COUNTERPARTY_TIN}
-    Send Example    ${json_name}    ${endpoint}    ${payload}    ${expected}    require=${require}
+    ${res}=    Send Example    ${json_name}    ${endpoint}    ${payload}    ${expected}    require=${require}
+    RETURN    ${res}
 
 Send Example
     [Documentation]    Ο πυρήνας: POST ${payload} στο ${endpoint}, έλεγχος

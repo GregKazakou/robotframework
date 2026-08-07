@@ -1,0 +1,189 @@
+{
+    "erpSource": "SAP",
+    "DocumentTypeCode": "INVOICE",
+    "InvoiceTypeCode": "1.1",
+    "isFuelInvoice": true,
+    "CurrencyCode": "EUR",
+    "Series": "B2B_FUEL_FAIL_301",
+    "Number": "{{incrementalCounter}}",
+    "DateIssued": "{{currentdate}}",
+    "Issuer": {
+        "RegisteredName": "issuer's name",
+        "Vat": "{{vat1}}",
+        "TaxOffice": "issuer's Tax Office",
+        "Address": {
+            "CountryCode": "GR",
+            "City": "issuer's city",
+            "Street": "issuer's street",
+            "Number": "1",
+            "Postal": "57008"
+        },
+        "BranchCode": 3
+    },
+    "CounterParty": {
+        "RegisteredName": "counter party's Name",
+        "Vat": "118058830",
+        "TaxOffice": "counter party's Tax Office",
+        "Address": {
+            "CountryCode": "GR",
+            "City": "counter party's city",
+            "Street": "counter party's street",
+            "Number": "1",
+            "Postal": "54625"
+        },
+        "BranchCode": 10
+    },
+    "DistributionDetails": {
+        "InternalDocumentId": "ERP_Unique_DocumentId{{incrementalCounter}}{{currentdate}}"
+    },
+    "PaymentDetails": {
+        "PaymentMethods": [
+            {
+                "PaymentMethodType": "On Credit",
+                "PaymentMethodTypeCode": 5,
+                "amount": 3723.0
+            }
+        ]
+    },
+    "AdditionalDetails": {
+        "TransmissionMethod": "A",
+        "DocumentTags": [
+            "Fuel",
+            "myDATA",
+            "Deviation",
+            "1.00$"
+        ]
+    },
+    "Details": [
+        {
+            "LineNo": 1,
+            "Code": "289420",
+            "ItemCodification": "289420",
+            "Descriptions": [
+                "DIESEL"
+            ],
+            "fuelCode": 20,
+            "MeasurementUnit": "LT",
+            "MeasurementUnitCode": 3,
+            "Quantity": 689.66,
+            "UnitPrice": 1.44999,
+            "NetTotal": 1000.0,
+            "Total": 1241.0,
+            "VATTotal": 241.0,
+            "VatCategory": "24%",
+            "VatCategoryCode": 1,
+            "IsInformative": false,
+            "IsHidden": false,
+            "DiscountOption": false,
+            "NoVat": false,
+            "RecordTypeCode": 0,
+            "IncomeClassification": {
+                "ClassificationTypeCode": "E3_561_001",
+                "ClassificationCategoryCode": "category1_1"
+            }
+        },
+        {
+            "LineNo": 2,
+            "Code": "289421",
+            "ItemCodification": "289421",
+            "Descriptions": [
+                "DIESEL AVIO"
+            ],
+            "fuelCode": 21,
+            "MeasurementUnit": "LT",
+            "MeasurementUnitCode": 3,
+            "Quantity": 689.66,
+            "UnitPrice": 1.44999,
+            "NetTotal": 1000.0,
+            "Total": 1241.0,
+            "VATTotal": 241.0,
+            "VatCategory": "24%",
+            "VatCategoryCode": 1,
+            "IsInformative": false,
+            "IsHidden": false,
+            "DiscountOption": false,
+            "NoVat": false,
+            "RecordTypeCode": 0,
+            "IncomeClassification": {
+                "ClassificationTypeCode": "E3_561_001",
+                "ClassificationCategoryCode": "category1_1"
+            }
+        },
+        {
+            "LineNo": 3,
+            "Code": "289430",
+            "ItemCodification": "289430",
+            "Descriptions": [
+                "UNLEADED 95"
+            ],
+            "fuelCode": 30,
+            "MeasurementUnit": "LT",
+            "MeasurementUnitCode": 3,
+            "Quantity": 689.66,
+            "UnitPrice": 1.44999,
+            "NetTotal": 1000.0,
+            "Total": 1241.01,
+            "VATTotal": 241.01,
+            "VatCategory": "24%",
+            "VatCategoryCode": 1,
+            "IsInformative": false,
+            "IsHidden": false,
+            "DiscountOption": false,
+            "NoVat": false,
+            "RecordTypeCode": 0,
+            "IncomeClassification": {
+                "ClassificationTypeCode": "E3_561_001",
+                "ClassificationCategoryCode": "category1_1"
+            }
+        }
+    ],
+    "Summaries": {
+        "TotalNetAmount": 3000.0,
+        "TotalVATAmount": 723.01,
+        "TotalWithheldAmount": 0,
+        "totalFeesAmount": 0,
+        "totalOtherTaxesAmount": 0,
+        "TotalStampDutyAmount": 0,
+        "TotalDeductionsAmount": 0,
+        "TotalGrossValue": 3723.01,
+        "totalPayableAmount": 3723.01
+    },
+    "VatAnalysis": [
+        {
+            "Name": "24%",
+            "Percentage": 24,
+            "VatAmount": 723.01,
+            "UnderlyingValue": 3000.0
+        }
+    ],
+     "MiscellaneousData": {
+        "Comments1": "myDATA 229 tolerance test — fuel invoice. 3 lines (fuelCode 20/21/30); line 3 (fuelCode 30) deviation +1.01 EUR (declared vatAmount vs net x 24%) -> exceeds 1.00 EUR per-line limit -> EXPECTED ValidationError 229 on invoice line 3. Per-line check, not cumulative."
+    },
+    "_debug": {
+        "per_line": [
+            {
+                "fuelCode": 20,
+                "net": 1000.0,
+                "declared_vat": 241.0,
+                "correct": 240.0,
+                "deviation": 1.0
+            },
+            {
+                "fuelCode": 21,
+                "net": 1000.0,
+                "declared_vat": 241.0,
+                "correct": 240.0,
+                "deviation": 1.0
+            },
+            {
+                "fuelCode": 30,
+                "net": 1000.0,
+                "declared_vat": 241.01,
+                "correct": 240.0,
+                "deviation": 1.01
+            }
+        ],
+        "max_per_line_deviation": 1.01,
+        "total_deviation": 3.01
+    }
+}
