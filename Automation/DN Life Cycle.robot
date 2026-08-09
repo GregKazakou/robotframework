@@ -43,6 +43,8 @@ ${DN_ISSUER_TIN}                ${ISSUER_TIN}
 ${DN_RECIPIENT_TIN}             ${RECIPIENT_TIN}
 ${DN_TRANSPORTER_TIN}           ${TRANSPORTER_TIN}
 ${DN_CARRIER_VAT}               ${TRANSPORTER_TIN}
+# VAT για μη-υπόχρεο παραλήπτη (§5 χωρίς ψηφιακή ιχνηλάτηση): 9 μηδενικά
+${DN_NON_OBLIGATED_VAT}         000000000
 
 # --- Secrets: πρέπει να οριστούν στο credentials.py (default κενά -> Setup προειδοποιεί) ---
 ${DN_PROVIDER_API_KEY_ISSUER}          ${EINVOICE_API_KEY}
@@ -467,7 +469,7 @@ Current TC Series
 # ======================================================================
 Issue Delivery Note
     [Arguments]    ${type_code}=9.3    ${without_digital}=${False}    ${non_obligated}=${False}
-    ...            ${reverse}=${False}
+    ...            ${reverse}=${False}    ${counterparty_vat}=${EMPTY}
     [Documentation]    Δημιουργεί παραστατικό μέσω Provider. Θέτει ${LAST_MARK}/${LAST_QR}.
     ${payload}=    Copy Dictionary    ${TPL_9_3}    deepcopy=True
     ${number}=     Next Document Number
@@ -482,6 +484,24 @@ Issue Delivery Note
     ...    nonObligatedRecipient=${non_obligated}
     ${issuer}=    Get From Dictionary    ${payload}    Issuer
     Set To Dictionary    ${issuer}    Vat=${DN_ISSUER_TIN}
+    # Counterparty VAT = 9 μηδενικά (000000000) όταν ΔΕΝ υπάρχει συγκεκριμένος
+    # υπόχρεος παραλήπτης — η ΑΑΔΕ το απαιτεί (error 289) στις εξής περιπτώσεις:
+    #   * type_code 9.2 (συγκεντρωτικό/onboard ΔΑ χωρίς παραλήπτη)
+    #   * nonObligatedRecipient=true (§5 χωρίς ψηφιακή ιχνηλάτηση)
+    # Explicit override με ${counterparty_vat} έχει προτεραιότητα· αλλιώς
+    # κρατιέται το VAT του template.
+    ${needs_zero_vat}=    Evaluate    $non_obligated or '${type_code}' == '9.2'
+    ${cp_vat}=    Set Variable If
+    ...    '${counterparty_vat}' != '${EMPTY}'    ${counterparty_vat}
+    ...    ${needs_zero_vat}                       ${DN_NON_OBLIGATED_VAT}
+    ...    ${NONE}
+    IF    $cp_vat is not None
+        ${cp}=    Get From Dictionary    ${payload}    CounterParty    default=${NONE}
+        IF    $cp is not None
+            Set To Dictionary    ${cp}    Vat=${cp_vat}
+            Log    Counterparty VAT -> ${cp_vat} (type=${type_code}, non_obligated=${non_obligated})
+        END
+    END
     Apply Dispatch DateTime    ${payload}    ${now}    ${number}
     ${resp}=    POST On Session    provider_issuer    /Invoice/json    json=${payload}    expected_status=any
     Log Response    ${resp}    Create ${type_code}
