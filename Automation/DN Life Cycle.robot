@@ -334,7 +334,7 @@ TC 31 - WDT 5.1 Onboard From 9.2
     [Documentation]    Αιτία «Συνέχεια από έκδοση 9.2 ΣΔΑ» (§5.1)
     Issue Delivery Note    type_code=9.2
     Register Transfer
-    Issue Delivery Note    without_digital=${True}    non_obligated=${True}      # 9.3 επί αυτοκινήτου
+    Issue Delivery Note    without_digital=${True}    non_obligated=${false}      # 9.3 επί αυτοκινήτου
     Verify Status      Completed
 
 TC 32 - WDT 5.2 Restaurant

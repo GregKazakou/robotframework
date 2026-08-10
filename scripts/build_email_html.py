@@ -62,12 +62,12 @@ SANS = "-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif"
 SUITE_INFO = [
     ("dateissued",       "Ζώνες ώρας στο dateIssued — 8 μορφές × 4 τύποι παραστατικών"),
     ("fnb_internalid",   "Μοναδικό InternalID σε FNB παραστατικά"),
-    ("fnb flows",        "B2B τιμολόγια FNB — έκδοση / χρεωστικό / πιστωτικό / ακύρωση"),
-    ("fnb",              "FNB τιμολόγια (8.6 / 11.1)"),
+    ("fnb flows",        "FNB 8.6 / 11.1 — έκδοση / χρεωστικό / πιστωτικό / ακύρωση / Κλειστήρι"),
+    ("fnb",              "FNB (8.6 / 11.1)"),
     ("pos flows",        "Ροές POS: signpos → 8.4/11.1 → validate / updatePayment"),
     ("receipts",         "Αποδείξεις λιανικής (8.4) με InternalID"),
     ("dn life cycle",    "Ψηφιακή Διακίνηση Αποθεμάτων Β΄ Φάση — κύκλος ζωής ΔΑ"),
-    ("notification",     "Ειδοποιήσεις παραστατικών (email / SMS)"),
+    ("notification",     "Ειδοποιήσεις παραστατικών (email / SMS / viber - Hyperlink & Attachment)"),
     ("api examples",     "Playground παραδειγμάτων API"),
     ("hotdog",           "UI tests: login, επιλογή εταιρείας, διαχείριση χρηστών"),
 ]
@@ -86,6 +86,26 @@ ERROR_HINTS = {
 BODY_RE    = re.compile(r"(\{.*\})", re.DOTALL)
 MESSAGE_RE = re.compile(r'"message"\s*:\s*"([^"]*)"')
 CODE_RE    = re.compile(r"<code>\s*(\d{2,4})\s*</code>")
+# Portal document URLs (…/p/… invoices, …/r/… receipts). Stop at quotes,
+# whitespace, angle brackets or a trailing backslash from JSON-escaped XML.
+URL_RE     = re.compile(r"https?://[^\s\"'<>\\]+")
+
+
+def extract_portal_url(raw: str) -> str:
+    """First portal document URL found in a failure message (the URL we append
+    to each test message, or the downloadingInvoiceUrl echoed in a response).
+    Prefers the demo-portal host; falls back to the first http(s) URL that is
+    not a GitHub/schema link."""
+    if not raw:
+        return ""
+    urls = URL_RE.findall(raw)
+    for u in urls:
+        if "einvoice-demo-portal" in u or "/p/" in u or "/r/" in u:
+            return u.rstrip(".,)")
+    for u in urls:
+        if "github.com" not in u and "w3.org" not in u and "aade.gr" not in u:
+            return u.rstrip(".,)")
+    return ""
 
 
 def extract_api_message(text: str) -> str:
@@ -198,6 +218,9 @@ def group_failures(failures):
             full_msg = entries[0][1]
             display_msg = short_message(full_msg, limit=180)
             code = _error_code(full_msg)
+            # portal URL only makes sense for a single test (grouped tests
+            # each have their own document)
+            url = extract_portal_url(full_msg) if len(names) == 1 else ""
             if len(names) == 1:
                 label = names[0]
             else:
@@ -211,7 +234,7 @@ def group_failures(failures):
                 else:
                     joined = ", ".join(names)
                     label = joined if len(joined) <= 70 else joined[:69] + "…"
-            out.append((suite, label, display_msg, len(names), code))
+            out.append((suite, label, display_msg, len(names), code, url))
     return out
 
 
@@ -263,7 +286,7 @@ def suite_row(name: str, passed: int, failed: int, skipped: int) -> str:
 
 
 def failure_block(suite: str, test_name: str, message: str,
-                  count: int, code: str) -> str:
+                  count: int, code: str, url: str = "") -> str:
     pill = ""
     if count > 1:
         pill = (
@@ -280,6 +303,16 @@ def failure_block(suite: str, test_name: str, message: str,
             f'color:{C["fail_dark"]};margin-top:6px;">'
             f'<b>{esc(code_txt)}</b></div>'
         )
+    # Clickable portal link — short label, so the long URL never overflows.
+    # href carries the full URL (escaped, NOT soft-wrapped so the link works).
+    url_line = ""
+    if url:
+        url_line = (
+            f'<div style="margin-top:6px;">'
+            f'<a href="{esc(url)}" style="font-family:{SANS};font-size:12px;'
+            f'font-weight:600;color:{C["accent"]};text-decoration:none;">'
+            f'🔗 Άνοιγμα παραστατικού στο portal →</a></div>'
+        )
     return (
         f'<table role="presentation" width="{CONTENT_W}" cellpadding="0" cellspacing="0"'
         f' border="0" style="width:{CONTENT_W}px;table-layout:fixed;border-collapse:collapse;'
@@ -295,6 +328,7 @@ def failure_block(suite: str, test_name: str, message: str,
         f'<div style="font-family:{MONO};font-size:12px;line-height:17px;'
         f'color:{C["fail_text"]};word-break:break-all;">{safe(message)}</div>'
         f'{code_line}'
+        f'{url_line}'
         f"</td></tr></table>"
     )
 
@@ -374,8 +408,8 @@ def render(output_xml_path: str) -> str:
     failures_section = ""
     if grouped:
         blocks = "".join(
-            failure_block(su, nm, msg, cnt, code)
-            for su, nm, msg, cnt, code in grouped
+            failure_block(su, nm, msg, cnt, code, url)
+            for su, nm, msg, cnt, code, url in grouped
         )
         failures_section = (
             section_title(f"Αστοχίες ({total_fail})")
