@@ -380,6 +380,7 @@ def render(output_xml_path: str) -> str:
     server = os.environ.get("GITHUB_SERVER_URL", "https://github.com")
     branch = os.environ.get("GITHUB_REF_NAME", "")
     run_url = f"{server}/{repo}/actions/runs/{run_id}" if repo and run_id else ""
+    schedule = os.environ.get("RUN_SCHEDULE", "").strip()
 
     if total_fail:
         status_label, status_bg, status_fg = f"{total_fail} FAILED", C["fail_bg"], C["fail_text"]
@@ -391,6 +392,13 @@ def render(output_xml_path: str) -> str:
     header_title = f"Run #{run_id}" if run_id else "Test run summary"
     if branch:
         header_title += f" · {branch}"
+
+    schedule_html = ""
+    if schedule:
+        schedule_html = (
+            f'<div style="font-family:{SANS};font-size:11px;line-height:15px;'
+            f'color:{C["faint"]};margin-top:3px;">🕒 Τρέχει {esc(schedule)}</div>'
+        )
 
     # Stat row (4 × 138 = 552)
     stats = (
@@ -452,6 +460,7 @@ def render(output_xml_path: str) -> str:
         API Regression · einvoice UAT</div>
       <div style="font-family:{SANS};font-size:19px;line-height:24px;font-weight:700;
         color:{C['text']};">{esc(header_title)}</div>
+      {schedule_html}
     </td>
     <td width="192" valign="middle" align="left" style="width:192px;padding-left:8px;">
       <span style="display:inline-block;background:{status_bg};color:{status_fg};

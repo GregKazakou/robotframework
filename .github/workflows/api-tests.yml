@@ -127,18 +127,20 @@ jobs:
           case "${{ matrix.suite }}" in
             *"DN Life Cycle"*) EXTRA_ARGS="--exclude placeholder" ;;
           esac
+          # Μόνο output.xml — ΟΧΙ log.html/report.html per-suite (πολλά MB).
+          # Το output.xml χρειάζεται μόνο για το merge στο επόμενο job.
           robot --outputdir results \
-                --output output.xml --log log.html --report report.html \
+                --output output.xml --log NONE --report NONE \
                 $EXTRA_ARGS \
                 "${{ matrix.suite }}"
 
-      - name: Upload per-suite artifact
+      - name: Upload per-suite output.xml (intermediate)
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: api-results-${{ steps.slug.outputs.slug }}
-          path: results/
-          retention-days: 14
+          path: results/output.xml
+          retention-days: 1
 
   # ──────────────────────── 3) merge + email ──────────────────────────
   report:
@@ -170,12 +172,32 @@ jobs:
           if not outputs:
               print("No output.xml files found.")
               sys.exit(0)
+          # report.html + output.xml (για το email body)· ΟΧΙ log.html (μεγάλο).
           subprocess.call([
               "rebot", "--name", "API Regression Suite",
               "--outputdir", "combined",
-              "--output", "output.xml", "--log", "log.html", "--report", "report.html",
+              "--output", "output.xml", "--log", "NONE", "--report", "report.html",
               *outputs,
           ])
+          PYEOF
+
+      - name: Compute run schedule (from cron in this workflow)
+        if: always()
+        shell: bash
+        run: |
+          python3 - <<'PYEOF'
+          import os, re
+          text = open(".github/workflows/api-tests.yml", encoding="utf-8").read()
+          crons = re.findall(r"cron:\s*'([^']+)'", text)
+          times = []
+          for c in crons:
+              p = c.split()
+              if len(p) >= 2 and p[0].isdigit() and p[1].isdigit():
+                  times.append(f"{int(p[1]):02d}:{int(p[0]):02d}")
+          desc = ("καθημερινά στις " + " & ".join(sorted(times)) + " UTC") if times else ""
+          with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as f:
+              f.write(f"RUN_SCHEDULE={desc}\n")
+          print("RUN_SCHEDULE =", desc)
           PYEOF
 
       # ⬇ ΝΕΟ STEP — ένα single line αντί για 200 γραμμές inline Python ⬇
@@ -189,7 +211,7 @@ jobs:
         with:
           name: api-combined-report
           path: |
-            combined/
+            combined/report.html
             email_body.html
 
       - name: Send Email Report
