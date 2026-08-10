@@ -65,7 +65,7 @@ SUITE_INFO = [
     ("fnb flows",        "FNB 8.6 / 11.1 — έκδοση / χρεωστικό / πιστωτικό / ακύρωση / Κλειστήρι"),
     ("fnb",              "FNB (8.6 / 11.1)"),
     ("pos flows",        "Ροές POS: signpos → 8.4/11.1 → validate / updatePayment"),
-    ("receipts",         "Αποδείξεις λιανικής (8.4) με InternalID"),
+    ("receipts",         "Μοναδικό InternalID σε Αποδείξεις (Receipts:8.4 & 8.5)"),
     ("dn life cycle",    "Ψηφιακή Διακίνηση Αποθεμάτων Β΄ Φάση — κύκλος ζωής ΔΑ"),
     ("notification",     "Ειδοποιήσεις παραστατικών (email / SMS / viber - Hyperlink & Attachment)"),
     ("api examples",     "Playground παραδειγμάτων API"),
