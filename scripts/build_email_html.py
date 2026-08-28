@@ -192,6 +192,54 @@ def test_status(t: ET.Element):
     return status, elapsed, raw
 
 
+_EP_RE = re.compile(
+    r"(/(?:Invoice/json|Receipt|PosTransactions/[A-Za-z]+|RegisterTransfer"
+    r"|ConfirmDelivery[A-Za-z]*|RejectDeliveryNote|Invoice/[A-Za-z]+))"
+)
+
+
+def extract_api_calls(test: ET.Element):
+    """One summary record per API call the test made. Prefers the stable
+    [[APICALL]] tag emitted by helpers.post_to; falls back to parsing the
+    HTTP-status log lines of the RequestsLibrary-based suites."""
+    msgs = [" ".join((m.text or "").split()) for m in test.iter("msg")]
+    msgs = [m for m in msgs if m]
+
+    calls = []
+    for tx in msgs:
+        i = tx.find("[[APICALL]]")
+        if i < 0:
+            continue
+        parts = tx[i + len("[[APICALL]] "):].split("|", 5)
+        if len(parts) == 6:
+            method, ep, status, mark, req, msg = parts
+            calls.append({"method": method, "ep": ep, "status": status,
+                          "mark": mark, "req": req, "msg": msg})
+    if calls:
+        return calls
+
+    # Fallback for suites that log via RequestsLibrary
+    for tx in msgs:
+        cf = re.search(r"Create\s+([\d.]+)\s+FAILED\s*\[HTTP\s*(\d{3})\]", tx)
+        issued = re.search(r"Issued\s+([\d.]+).*?mark=(\d+)", tx)
+        http = re.search(r"HTTP\s*(\d{3})", tx)
+        if cf:
+            calls.append({"method": "POST", "ep": "/Invoice/json",
+                          "status": cf.group(2), "mark": "", "req": cf.group(1),
+                          "msg": "create failed"})
+        elif issued:
+            calls.append({"method": "POST", "ep": "/Invoice/json",
+                          "status": "201", "mark": issued.group(2),
+                          "req": issued.group(1), "msg": ""})
+        elif http:
+            ep = _EP_RE.search(tx)
+            mk = re.search(r"mark=(\d+)", tx)
+            calls.append({"method": "POST", "ep": ep.group(1) if ep else "",
+                          "status": http.group(1), "mark": mk.group(1) if mk else "",
+                          "req": "", "msg": ""})
+    return calls
+
+
 def suite_description(name: str) -> str:
     low = name.lower()
     for key, desc in SUITE_INFO:
@@ -333,6 +381,67 @@ def failure_block(suite: str, test_name: str, message: str,
     )
 
 
+def call_line(c: dict) -> str:
+    st = str(c.get("status", "") or "?")
+    color = (C["ok_text"] if st[:1] in ("2", "3")
+             else C["fail_text"] if st[:1] in ("4", "5") else C["muted"])
+    extras = []
+    if c.get("req"):
+        extras.append(esc(str(c["req"]).strip()))
+    if c.get("mark"):
+        extras.append("mark " + esc(str(c["mark"])))
+    if c.get("msg"):
+        extras.append(safe(str(c["msg"])))
+    extra = (" · " + " · ".join(x for x in extras if x)) if extras else ""
+    ep = c.get("ep") or ""
+    ep_html = (f'<span style="color:{C["text"]};">{esc(ep)}</span> '
+               if ep else "")
+    return (
+        f'<div style="font-family:{MONO};font-size:11px;line-height:16px;'
+        f'color:{C["muted"]};padding:1px 0;word-break:break-all;">'
+        f'{esc(c.get("method", "POST"))} {ep_html}→ '
+        f'<span style="color:{color};font-weight:700;">{st}</span>{extra}</div>'
+    )
+
+
+def api_calls_section(calls_by_suite, cap: int = 400) -> str:
+    rows = []
+    shown = 0
+    truncated = 0
+    for suite_name, tests in calls_by_suite:
+        if not any(calls for _n, _s, calls in tests):
+            continue
+        rows.append(
+            f'<div style="font-family:{SANS};font-size:12px;line-height:16px;'
+            f'font-weight:700;color:{C["text"]};margin:12px 0 4px 0;">'
+            f'{esc(suite_name)}</div>'
+        )
+        for tname, tstatus, calls in tests:
+            if not calls:
+                continue
+            dot = C["ok_dot"] if tstatus == "PASS" else (
+                C["fail_dot"] if tstatus == "FAIL" else C["warn_dot"])
+            rows.append(
+                f'<div style="font-family:{SANS};font-size:11px;line-height:15px;'
+                f'color:{C["muted"]};margin:5px 0 1px 0;">'
+                f'<span style="color:{dot};">●</span> {esc(tname)}</div>'
+            )
+            for c in calls:
+                if shown >= cap:
+                    truncated += 1
+                    continue
+                rows.append(
+                    f'<div style="padding-left:12px;">{call_line(c)}</div>'
+                )
+                shown += 1
+    if truncated:
+        rows.append(
+            f'<div style="font-family:{SANS};font-size:11px;color:{C["faint"]};'
+            f'margin-top:8px;">+{truncated} ακόμη κλήσεις — δες το report.html</div>'
+        )
+    return "".join(rows)
+
+
 def section_title(text: str) -> str:
     return (
         f'<tr><td style="padding:20px {PAD_X}px 8px {PAD_X}px;">'
@@ -351,10 +460,12 @@ def render(output_xml_path: str) -> str:
     total_pass = total_fail = total_skip = 0
     suite_summary = []
     failures = []
+    calls_by_suite = []
     total_ms = 0
 
     for suite_name, tests in suites:
         p = f = s = 0
+        suite_calls = []
         for t in tests:
             status, elapsed, raw = test_status(t)
             total_ms += int(elapsed * 1000)
@@ -365,7 +476,9 @@ def render(output_xml_path: str) -> str:
                 failures.append((suite_name, t.get("name") or "", raw))
             else:
                 s += 1
+            suite_calls.append((t.get("name") or "", status, extract_api_calls(t)))
         suite_summary.append((suite_name, p, f, s))
+        calls_by_suite.append((suite_name, suite_calls))
         total_pass += p
         total_fail += f
         total_skip += s
@@ -422,6 +535,14 @@ def render(output_xml_path: str) -> str:
         failures_section = (
             section_title(f"Αστοχίες ({total_fail})")
             + f'<tr><td style="padding:4px {PAD_X}px 4px {PAD_X}px;">{blocks}</td></tr>'
+        )
+
+    calls_html = api_calls_section(calls_by_suite)
+    calls_section = ""
+    if calls_html:
+        calls_section = (
+            section_title("API κλήσεις (request → response)")
+            + f'<tr><td style="padding:4px {PAD_X}px 8px {PAD_X}px;">{calls_html}</td></tr>'
         )
 
     run_link = (
@@ -486,6 +607,8 @@ def render(output_xml_path: str) -> str:
 </td></tr>
 
 {failures_section}
+
+{calls_section}
 
 <!-- Footer -->
 <tr><td style="padding:14px {PAD_X}px 18px {PAD_X}px;border-top:1px solid {C['border']};">

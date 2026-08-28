@@ -85,11 +85,35 @@ def post_to(path: str,
             url, json=payload, headers=headers,
             params=query or None, timeout=_state["timeout"],
         )
-        return _parse_response(path, resp, payload)
+        result = _parse_response(path, resp, payload)
     except requests.exceptions.Timeout:
-        return _network_error_dict(path, payload, "client-side timeout")
+        result = _network_error_dict(path, payload, "client-side timeout")
     except requests.RequestException as exc:
-        return _network_error_dict(path, payload, f"network error: {exc}")
+        result = _network_error_dict(path, payload, f"network error: {exc}")
+    _log_api_call("POST", path, result, payload)
+    return result
+
+
+def _log_api_call(method: str, endpoint: str, result: Dict[str, Any],
+                  payload: Dict[str, Any]) -> None:
+    """Emit a stable, machine-parseable line into the Robot log so the email
+    report can list one summary line per API call. Format:
+        [[APICALL]] METHOD|endpoint|status|mark|reqdigest|message
+    """
+    status = result.get("status_code", "")
+    mark = result.get("mark", "") or ""
+    msg = (result.get("message") or "").replace("\n", " ").replace("|", "/")
+    if len(msg) > 140:
+        msg = msg[:139] + "…"
+    itc = (payload.get("InvoiceTypeCode") or payload.get("invoiceTypeCode")
+           or payload.get("invoiceType") or "")
+    req = (f"type {itc}" if itc else "").strip()
+    line = f"[[APICALL]] {method}|{endpoint}|{status}|{mark}|{req}|{msg}"
+    try:
+        from robot.api import logger as _robot_logger
+        _robot_logger.info(line)
+    except Exception:
+        pass  # running outside Robot (e.g. unit tests)
 
 
 def post_receipt(payload: Dict[str, Any], erp: str = "none") -> Dict[str, Any]:
