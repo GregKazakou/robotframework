@@ -69,8 +69,9 @@ ${EP_UPDATE_PAYMENT}   /Invoice/updatePayment
 8.6 debit FNB form Generic                      8.6_Debit_FNB_Form.json                ${EP_INVOICE}    201         mark
     [Tags]    invoice    fnb
 
-1.1 B2G invoice Generic                     1.1_B2G.json                           ${EP_INVOICE}    201         mark
-    [Tags]    invoice    b2g    
+# 1.1 B2G invoice Generic                   1.1_B2G.json                           ${EP_INVOICE}    201         mark
+#     [Tags]    invoice    b2g
+#   ↑ ενεργοποίησέ το όταν προσθέσεις το Automation/Data/1.1_B2G.json
 # ↓↓↓ Πρόσθεσε τα δικά σου παραδείγματα εδώ (json στο Automation/Data/) ↓↓↓
 
 
