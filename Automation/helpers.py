@@ -35,6 +35,7 @@ import copy
 import csv
 import json
 import os
+import re
 from typing import Any, Dict, List, Optional
 
 import requests
@@ -345,8 +346,15 @@ def apply_unique_fields(payload: Dict[str, Any], prefix: str = "EX") -> Dict[str
         set_if_present(new, k, guid)
 
     dist = new.get("DistributionDetails")
-    if isinstance(dist, dict) and "InternalDocumentId" in dist:
-        dist["InternalDocumentId"] = guid
+    if isinstance(dist, dict):
+        if "InternalDocumentId" in dist:
+            dist["InternalDocumentId"] = guid
+        # Delivery notes carry dispatch date/time that "age" and get rejected
+        # (error 280: DispatchDate must be ≥ current date). Refresh to now.
+        iso_now = now.strftime("%Y-%m-%dT%H:%M:%S")
+        for k in ("dispatchDate", "dispatchtime", "DispatchDate", "DispatchTime"):
+            if k in dist:
+                dist[k] = iso_now
 
     return new
 
@@ -354,6 +362,49 @@ def apply_unique_fields(payload: Dict[str, Any], prefix: str = "EX") -> Dict[str
 def parse_json(text: str) -> Dict[str, Any]:
     """Parse a JSON string into a dict (for inline examples in .robot files)."""
     return json.loads(text)
+
+
+def set_delivery_note_marks(payload: Dict[str, Any], marks) -> Dict[str, Any]:
+    """Return a copy of payload with deliveryNoteMarks set to the given marks.
+    The provider maps this input field to the myDATA XML element
+    <multipleConnectedMarks>."""
+    new = copy.deepcopy(payload)
+    new["deliveryNoteMarks"] = [str(m) for m in marks]
+    return new
+
+
+def fetch_aade_xml(portal_url: str, timeout: int = 60) -> str:
+    """GET the myDATA XML of a document from its portal URL + '/aade'."""
+    url = (portal_url or "").rstrip("/") + "/aade"
+    resp = requests.get(
+        url, headers={"Accept": "application/xml,text/html"}, timeout=timeout
+    )
+    return resp.text
+
+
+_MCM_RE = re.compile(
+    r"<multipleConnectedMarks>\s*([^<\s]+)\s*</multipleConnectedMarks>"
+)
+
+
+def connected_marks_in_xml(xml: str) -> List[str]:
+    """All <multipleConnectedMarks> values found in a myDATA XML document."""
+    return _MCM_RE.findall(xml or "")
+
+
+def assert_connected_marks(xml: str, expected_marks) -> str:
+    """Assert every expected mark appears as a multipleConnectedMarks in the
+    myDATA XML. Raises AssertionError listing any missing marks."""
+    expected = [str(m) for m in expected_marks]
+    found = connected_marks_in_xml(xml)
+    found_set = set(found)
+    missing = [m for m in expected if m not in found_set]
+    if missing:
+        raise AssertionError(
+            f"AADE multipleConnectedMarks mismatch: expected {expected}, "
+            f"found {found}, missing {missing}"
+        )
+    return f"multipleConnectedMarks OK ({len(expected)} marks): {found}"
 
 
 def set_party_vats(payload: Dict[str, Any],

@@ -93,6 +93,65 @@ FUEL - per-line VAT deviation 1.00 EUR -> 201 (within tolerance)
     Run Example From File    1.1_B2B_FUEL_PASS.json    ${EP_INVOICE}    201    require=mark
 
 
+# ── Συσχέτιση παραστατικών μέσω deliveryNoteMarks ↔ multipleConnectedMarks ────
+#    Ο provider χαρτογραφεί το input πεδίο deliveryNoteMarks στο myDATA XML
+#    στοιχείο multipleConnectedMarks. Οι έλεγχοι κατεβάζουν το /aade XML και
+#    επαληθεύουν ότι τα marks συσχετίστηκαν σωστά.
+DN LINK - three 9.3 delivery notes linked into one 1.1
+    [Template]    NONE
+    [Tags]        invoice    deliverynote    correlation
+    # 1) Έκδοση 3 δελτίων αποστολής 9.3 — κρατάμε τα marks
+    @{dn_marks}=    Create List
+    FOR    ${i}    IN RANGE    3
+        ${n}=      Evaluate    ${i} + 1
+        ${dn}=     api.Load Template    9.3_Sales_20lines
+        ${dn}=     api.Apply Unique Fields    ${dn}    DN
+        ${dn}=     api.Set Party Vats    ${dn}    ${ISSUER_VAT}    ${COUNTERPARTY_TIN}
+        ${res}=    Send Example    9.3 delivery note #${n}    ${EP_INVOICE}    ${dn}    201    require=mark
+        Append To List    ${dn_marks}    ${res.mark}
+    END
+    Log    3 delivery-note marks: ${dn_marks}    INFO
+
+    # 2) Έκδοση ενός 1.1 με τα 3 marks στο deliveryNoteMarks
+    ${inv}=    api.Load Template    1.1_B2B
+    ${inv}=    api.Apply Unique Fields    ${inv}    INV
+    ${inv}=    api.Set Party Vats    ${inv}    ${ISSUER_VAT}    ${COUNTERPARTY_TIN}
+    ${inv}=    api.Set Delivery Note Marks    ${inv}    ${dn_marks}
+    ${inv_res}=    Send Example    1.1 linked to 3 delivery notes    ${EP_INVOICE}    ${inv}    201    require=mark
+
+    # 3) Κατέβασμα του AADE XML του 1.1 και επαλήθευση multipleConnectedMarks
+    ${xml}=    api.Fetch Aade Xml    ${inv_res.url}
+    ${note}=   api.Assert Connected Marks    ${xml}    ${dn_marks}
+    Log    ${note}    INFO
+
+DN LINK - one 9.3 delivery note linked to three 1.1 invoices
+    [Template]    NONE
+    [Tags]        invoice    deliverynote    correlation
+    # 1) Έκδοση 3 τιμολογίων 1.1 — κρατάμε τα marks
+    @{inv_marks}=    Create List
+    FOR    ${i}    IN RANGE    3
+        ${n}=      Evaluate    ${i} + 1
+        ${inv}=    api.Load Template    1.1_B2B
+        ${inv}=    api.Apply Unique Fields    ${inv}    INV
+        ${inv}=    api.Set Party Vats    ${inv}    ${ISSUER_VAT}    ${COUNTERPARTY_TIN}
+        ${res}=    Send Example    1.1 invoice #${n}    ${EP_INVOICE}    ${inv}    201    require=mark
+        Append To List    ${inv_marks}    ${res.mark}
+    END
+    Log    3 invoice marks: ${inv_marks}    INFO
+
+    # 2) Έκδοση ενός 9.3 με τα 3 marks των 1.1 στο deliveryNoteMarks
+    ${dn}=     api.Load Template    9.3_Sales_20lines
+    ${dn}=     api.Apply Unique Fields    ${dn}    DN
+    ${dn}=     api.Set Party Vats    ${dn}    ${ISSUER_VAT}    ${COUNTERPARTY_TIN}
+    ${dn}=     api.Set Delivery Note Marks    ${dn}    ${inv_marks}
+    ${dn_res}=    Send Example    9.3 linked to 3 invoices    ${EP_INVOICE}    ${dn}    201    require=mark
+
+    # 3) Επαλήθευση συσχέτισης στο AADE XML του 9.3
+    ${xml}=    api.Fetch Aade Xml    ${dn_res.url}
+    ${note}=   api.Assert Connected Marks    ${xml}    ${inv_marks}
+    Log    ${note}    INFO
+
+
 # ── Inline παράδειγμα (χτίζεις το JSON στο test, χωρίς νέο αρχείο) ─────────────
 #    Φορτώνει ένα template και το πειράζει inline με Deep Merge. Έτσι βλέπεις
 #    πώς να αλλάζεις μόνο ό,τι θες, χωρίς να αντιγράφεις όλο το JSON.
