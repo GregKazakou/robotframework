@@ -56,6 +56,8 @@ ${EP_RECEIPT}          /Receipt
 ${EP_SIGNPOS}          /PosTransactions/signpos
 ${EP_VALIDATE}         /PosTransactions/validate
 ${EP_UPDATE_PAYMENT}   /Invoice/updatePayment
+${EP_CANCEL_DN}        /Invoice/cancelDeliveryNote
+${EP_GET_DOCUMENTS}    /api/Invoice/GetDocuments
 
 
 *** Test Cases ***                     JSON_FILE                              ENDPOINT         EXPECTED    REQUIRE
@@ -153,6 +155,50 @@ DN LINK - one 9.3 delivery note linked to three 1.1 invoices
     Log    ${note}    INFO
 
 
+# ── Επιπλέον operations από το Postman collection (συνδυασμός με create) ───────
+DN CANCEL - issue a 9.3 delivery note then cancel it
+    [Documentation]    Έκδοση 9.3 (Registered) και μετά ακύρωση μέσω
+    ...                /Invoice/cancelDeliveryNote με το mark του.
+    [Template]    NONE
+    [Tags]        deliverynote    cancel
+    ${dn}=     api.Load Template    9.3_Sales_20lines
+    ${dn}=     api.Apply Unique Fields    ${dn}    CANCEL
+    ${dn}=     api.Set Party Vats    ${dn}    ${ISSUER_VAT}    ${COUNTERPARTY_TIN}
+    ${res}=    Send Example    9.3 delivery note (to cancel)    ${EP_INVOICE}    ${dn}    201    require=mark
+
+    ${cancel}=    Create Dictionary    vat=${ISSUER_TIN}    mark=${res.mark}
+    Send Example    cancel delivery note    ${EP_CANCEL_DN}    ${cancel}    200
+
+POS VALIDATE - signpos then validate payment
+    [Documentation]    signpos (8.4) → /PosTransactions/validate με το
+    ...                signature/input που επιστράφηκε.
+    [Template]    NONE
+    [Tags]        signpos    validate    pos
+    ${vat}=    Evaluate    round(124 - 124/1.13, 2)
+    ${net}=    Evaluate    round(124 - ${vat}, 2)
+    ${base}=   api.Load Template    signpos
+    ${over}=   Create Dictionary
+    ...    issueDate=${TODAY}    invoiceTypeCode=8.4    identifier=${RUN_STAMP}VAL
+    ...    mark=${0}    paymentAmount=${124}    totalAmount=${124}
+    ...    totalNetAmount=${net}    totalVatAmount=${vat}    terminalId=16000198
+    ${sp}=     api.Deep Merge    ${base}    ${over}
+    ${spres}=  Send Example    signpos for validate    ${EP_SIGNPOS}    ${sp}    200    require=signature,input
+
+    ${q}=          Create Dictionary    IssuerTin=${ISSUER_VAT}
+    ${vpayload}=    Create Dictionary    input=${spres.input}    signature=${spres.signature}
+    Send Example    validate payment    ${EP_VALIDATE}    ${vpayload}    200    ${q}
+
+GET DOCS - list issuer documents for today
+    [Documentation]    GET /api/Invoice/GetDocuments στο portal για τα
+    ...                παραστατικά του εκδότη στο σημερινό εύρος.
+    [Template]    NONE
+    [Tags]        query    documents    get
+    ${from}=   Evaluate    (__import__('datetime').date.today() - __import__('datetime').timedelta(days=30)).strftime('%Y%m%d')
+    ${to}=     Evaluate    __import__('datetime').date.today().strftime('%Y%m%d')
+    ${q}=      Create Dictionary    From=${from}    To=${to}
+    Get Example    get documents    ${EP_GET_DOCUMENTS}/${ISSUER_VAT}/1/    200    ${q}    base=${UAT_PORTAL}
+
+
 # ── Inline παράδειγμα (χτίζεις το JSON στο test, χωρίς νέο αρχείο) ─────────────
 #    Φορτώνει ένα template και το πειράζει inline με Deep Merge. Έτσι βλέπεις
 #    πώς να αλλάζεις μόνο ό,τι θες, χωρίς να αντιγράφεις όλο το JSON.
@@ -223,5 +269,18 @@ Send Example
         Set Test Message    *HTML* <br>${label}: <a href="${url}">${url}</a>    append=${True}
     END
 
+    ${bunch}=    Evaluate    type('R',(object,),$res)()    modules=builtins
+    RETURN    ${bunch}
+
+Get Example
+    [Documentation]    Όπως το Send Example αλλά GET. ${base} επιτρέπει άλλο host
+    ...                (π.χ. ${UAT_PORTAL} για το GetDocuments).
+    [Arguments]    ${label}    ${endpoint}    ${expected}    ${query}=${None}    ${base}=${NONE}
+    ${res}=    api.Get To    ${endpoint}    ${query}    ${base}
+    ${actual}=    Set Variable    ${res}[status_code]
+    Log To Console    \n[GET ${endpoint}] ${label}: HTTP ${actual} | ${res}[summary]
+    Run Keyword And Continue On Failure
+    ...    Should Be Equal As Integers    ${actual}    ${expected}
+    ...    msg=${label} (GET ${endpoint}): expected ${expected}, got ${actual} | ${res}[summary]
     ${bunch}=    Evaluate    type('R',(object,),$res)()    modules=builtins
     RETURN    ${bunch}

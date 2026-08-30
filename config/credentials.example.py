@@ -8,6 +8,7 @@ ISSUER_VAT = "EL000000000"
 
 # --- Base URLs ---
 UAT_API         = "https://einvoiceapiuat.impact.gr"
+UAT_PORTAL      = "https://einvoiceportaluat.impact.gr"
 MYDATA_API_DEV  = "https://mydataapidev.aade.gr"
 
 # --- Issuer / Transporter ---

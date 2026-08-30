@@ -116,6 +116,32 @@ def _log_api_call(method: str, endpoint: str, result: Dict[str, Any],
         pass  # running outside Robot (e.g. unit tests)
 
 
+def get_to(path: str,
+           query: Optional[Dict[str, str]] = None,
+           base_url: Optional[str] = None) -> Dict[str, Any]:
+    """Generic GET to {base_url or configured base}{path}. Returns the same
+    flat result dict as post_to. base_url lets a call target another host
+    (e.g. the portal for GetDocuments)."""
+    if _state["session"] is None:
+        raise RuntimeError("Call 'Configure Client' in Suite Setup first.")
+    base = (base_url or _state["base_url"] or "").rstrip("/")
+    if not path.startswith("/"):
+        path = "/" + path
+    url = base + path
+    headers = {"apikey": _state["api_key"], "Content-Type": "application/json"}
+    try:
+        resp = _state["session"].get(
+            url, headers=headers, params=query or None, timeout=_state["timeout"],
+        )
+        result = _parse_response(path, resp, {})
+    except requests.exceptions.Timeout:
+        result = _network_error_dict(path, {}, "client-side timeout")
+    except requests.RequestException as exc:
+        result = _network_error_dict(path, {}, f"network error: {exc}")
+    _log_api_call("GET", path, result, {})
+    return result
+
+
 def post_receipt(payload: Dict[str, Any], erp: str = "none") -> Dict[str, Any]:
     """Backwards-compat wrapper used by test_receipt_api.robot."""
     return post_to("/Receipt", payload, erp)
