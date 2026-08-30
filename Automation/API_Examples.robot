@@ -198,6 +198,20 @@ GET DOCS - list issuer documents for today
     ${q}=      Create Dictionary    From=${from}    To=${to}
     Get Example    get documents    ${EP_GET_DOCUMENTS}/${ISSUER_VAT}/1/    200    ${q}    base=${UAT_PORTAL}
 
+AUTH LOGIN - authenticate and get an access token
+    [Documentation]    POST /Authentication/login {key, vat} → JWT accessToken.
+    [Template]    NONE
+    [Tags]        auth    login
+    ${creds}=    Create Dictionary    key=${API_KEY}    vat=${ISSUER_VAT}
+    Send Example    authentication login    /Authentication/login    ${creds}    200    require=accessToken
+
+GET PDF - create a 1.1 then download its PDF
+    [Documentation]    Έκδοση 1.1 → GET {url}/pdf (application/pdf).
+    [Template]    NONE
+    [Tags]        invoice    pdf    get
+    ${res}=    Run Example From File    1.1_B2B.json    ${EP_INVOICE}    201    require=mark
+    Get Example    get document PDF    /pdf    200    base=${res.url}
+
 
 # ── Inline παράδειγμα (χτίζεις το JSON στο test, χωρίς νέο αρχείο) ─────────────
 #    Φορτώνει ένα template και το πειράζει inline με Deep Merge. Έτσι βλέπεις
