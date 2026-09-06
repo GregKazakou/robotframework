@@ -107,7 +107,8 @@ def _log_api_call(method: str, endpoint: str, result: Dict[str, Any],
         msg = msg[:139] + "…"
     itc = (payload.get("InvoiceTypeCode") or payload.get("invoiceTypeCode")
            or payload.get("invoiceType") or "")
-    req = (f"type {itc}" if itc else "").strip()
+    series = payload.get("Series") or payload.get("series") or ""
+    req = " · ".join(x for x in [f"type {itc}" if itc else "", series] if x)
     line = f"[[APICALL]] {method}|{endpoint}|{status}|{mark}|{req}|{msg}"
     try:
         from robot.api import logger as _robot_logger
@@ -359,13 +360,31 @@ def deep_merge(base: Dict[str, Any], overrides: Dict[str, Any]) -> Dict[str, Any
     return out
 
 
+def _series_prefix_from_context(fallback: str) -> str:
+    """Build a readable Series prefix from the running Robot test name, e.g.
+    test "DN CANCEL - issue a 9.3…" -> "DNCANCEL". Falls back to the caller's
+    value outside Robot (e.g. unit tests)."""
+    try:
+        from robot.libraries.BuiltIn import BuiltIn
+        test = BuiltIn().get_variable_value("${TEST NAME}") or ""
+    except Exception:
+        test = ""
+    head = test.split(" - ", 1)[0] if test else ""
+    slug = re.sub(r"[^A-Za-z0-9]+", "", head).upper()[:20]
+    return slug or (fallback or "EX")
+
+
 def apply_unique_fields(payload: Dict[str, Any], prefix: str = "EX") -> Dict[str, Any]:
     """Return a copy of `payload` with unique identifiers, so the same example
     JSON can be POSTed repeatedly without duplicate-document rejections.
 
+    The Series is prefixed with a readable tag derived from the current Robot
+    test name (so a document's Series shows which case created it); the passed
+    `prefix` is only a fallback used outside Robot.
+
     Only keys that ALREADY exist in the payload are touched (both camelCase
     and PascalCase), so it is safe on any template:
-      * Series / series           -> {prefix}-<timestamp>
+      * Series / series           -> <TESTSLUG>-<timestamp>
       * Number / number / aa       -> <timestamp>
       * dateIssued / DateIssued / issueDate -> today (YYYY-MM-DD)
       * providerSignatureIdentifier / internalDocumentId / InternalDocumentId
@@ -377,7 +396,7 @@ def apply_unique_fields(payload: Dict[str, Any], prefix: str = "EX") -> Dict[str
     new = copy.deepcopy(payload)
     now = datetime.datetime.now()
     stamp = now.strftime("%y%m%d%H%M%S") + f"{now.microsecond // 1000:03d}"
-    series = f"{prefix}-{stamp}"
+    series = f"{_series_prefix_from_context(prefix)}-{stamp}"
     today = now.strftime("%Y-%m-%d")
     guid = str(uuid.uuid4())
 
