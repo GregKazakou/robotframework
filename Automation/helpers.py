@@ -433,6 +433,70 @@ def parse_json(text: str) -> Dict[str, Any]:
     return json.loads(text)
 
 
+def set_internal_document_id(payload: Dict[str, Any], value: str) -> Dict[str, Any]:
+    """Return a copy with a known InternalDocumentId (so it can be referenced
+    later, e.g. in the media/upload URL). Sets DistributionDetails.
+    InternalDocumentId and any top-level internalDocumentId/InternalDocumentId."""
+    new = copy.deepcopy(payload)
+    dist = new.get("DistributionDetails")
+    if isinstance(dist, dict):
+        dist["InternalDocumentId"] = value
+    for k in ("internalDocumentId", "InternalDocumentId"):
+        if k in new:
+            new[k] = value
+    return new
+
+
+def upload_media_file(issuer_tin: str, internal_doc_id: str, file_path: str,
+                      content_type: str = "", store_months: int = 1) -> Dict[str, Any]:
+    """POST a single attachment to
+    /media/upload/{issuer_tin}/{internal_doc_id}?storeDurationMonths=N
+    as multipart form-data (field 'File'). Returns a flat result dict with
+    status_code, success (per-file), message; also logs an [[APICALL]] line."""
+    import mimetypes
+    import os as _os
+
+    if _state["session"] is None:
+        raise RuntimeError("Call 'Configure Client' in Suite Setup first.")
+    base = (_state["base_url"] or "").rstrip("/")
+    url = f"{base}/media/upload/{issuer_tin}/{internal_doc_id}?storeDurationMonths={store_months}"
+    name = _os.path.basename(file_path)
+    ctype = content_type or mimetypes.guess_type(name)[0] or "application/octet-stream"
+
+    with open(file_path, "rb") as fh:
+        data = fh.read()
+    try:
+        resp = _state["session"].post(
+            url, headers={"APIKey": _state["api_key"]},
+            files={"File": (name, data, ctype)}, timeout=_state["timeout"],
+        )
+        status = resp.status_code
+        raw = resp.text
+        try:
+            body = resp.json()
+        except Exception:
+            body = []
+        ok = bool(body) and all(
+            (it.get("success") is True) for it in body if isinstance(it, dict)
+        )
+        if status >= 400:
+            ok = False
+    except requests.RequestException as exc:
+        status, raw, body, ok = 0, f"network error: {exc}", [], False
+
+    result = {
+        "endpoint": f"/media/upload ({name})",
+        "status_code": status,
+        "success": ok,
+        "message": (raw or "")[:200],
+        "mark": "", "uid": "", "signature": "", "input": "",
+        "url": "", "raw_text": raw, "body_dict": body if isinstance(body, dict) else {},
+        "summary": f"{name}: HTTP {status} {'OK' if ok else 'FAILED'}",
+    }
+    _log_api_call("POST", f"/media/upload ({name})", result, {})
+    return result
+
+
 def set_delivery_note_marks(payload: Dict[str, Any], marks) -> Dict[str, Any]:
     """Return a copy of payload with deliveryNoteMarks set to the given marks.
     The provider maps this input field to the myDATA XML element

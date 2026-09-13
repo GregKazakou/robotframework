@@ -58,6 +58,7 @@ ${EP_VALIDATE}         /PosTransactions/validate
 ${EP_UPDATE_PAYMENT}   /Invoice/updatePayment
 ${EP_CANCEL_DN}        /Invoice/cancelDeliveryNote
 ${EP_GET_DOCUMENTS}    /api/Invoice/GetDocuments
+${DATA_DIR}            ${CURDIR}/Data
 
 
 *** Test Cases ***                     JSON_FILE                              ENDPOINT         EXPECTED    REQUIRE
@@ -211,6 +212,33 @@ GET PDF - create a 1.1 then download its PDF
     [Tags]        invoice    pdf    get
     ${res}=    Run Example From File    1.1_B2B.json    ${EP_INVOICE}    201    require=mark
     Get Example    get document PDF    /pdf    200    base=${res.url}
+
+MEDIA UPLOAD - attach common file formats to a 1.1
+    [Documentation]    Έκδοση 1.1 με γνωστό InternalDocumentId, μετά upload
+    ...                συνημμένων διαφόρων μορφών μέσω
+    ...                /media/upload/{issuerTIN}/{InternalDocumentId}.
+    ...                Έλεγχος: το response κάθε upload είναι success=true.
+    ...                ΣΗΜ.: η downloadable σελίδα του portal (SPA) ΔΕΝ εμφανίζει
+    ...                τα συνημμένα — επαληθεύουμε από το API response.
+    [Template]    NONE
+    [Tags]        invoice    media    upload
+    ${idoc}=    Set Variable    APIEX-MEDIA-${RUN_STAMP}
+    ${inv}=     api.Load Template    1.1_B2B
+    ${inv}=     api.Apply Unique Fields    ${inv}    MEDIA
+    ${inv}=     api.Set Party Vats    ${inv}    ${ISSUER_VAT}    ${COUNTERPARTY_TIN}
+    ${inv}=     api.Set Internal Document Id    ${inv}    ${idoc}
+    ${res}=     Send Example    1.1 for media attachments    ${EP_INVOICE}    ${inv}    201    require=mark
+
+    @{files}=    Create List
+    ...    sample.json    sample.csv    sample.xml    sample.html
+    ...    sample.txt    sample.pdf    sample.docx    sample.xlsx
+    FOR    ${f}    IN    @{files}
+        ${r}=    api.Upload Media File    ${ISSUER_VAT}    ${idoc}    ${DATA_DIR}/attachments/${f}
+        Should Be True    ${r}[success]
+        ...    msg=Media upload απέτυχε για ${f}: HTTP ${r}[status_code] ${r}[message]
+        Log    Attached ${f} -> ${r}[summary]    INFO
+    END
+    Set Test Message    *HTML* <br>1.1 mark=${res.mark} · 8 attachments uploaded · <a href="${res.url}">${res.url}</a>    append=${True}
 
 
 # ── Inline παράδειγμα (χτίζεις το JSON στο test, χωρίς νέο αρχείο) ─────────────
