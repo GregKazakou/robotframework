@@ -447,6 +447,27 @@ def set_internal_document_id(payload: Dict[str, Any], value: str) -> Dict[str, A
     return new
 
 
+def set_additional_details(payload: Dict[str, Any],
+                           transmission_method: str = "",
+                           tag: str = "") -> Dict[str, Any]:
+    """Return a copy with AdditionalDetails.TransmissionMethod set and/or a
+    DocumentTag appended (both optional)."""
+    new = copy.deepcopy(payload)
+    ad = new.get("AdditionalDetails")
+    if not isinstance(ad, dict):
+        ad = {}
+        new["AdditionalDetails"] = ad
+    if transmission_method:
+        ad["TransmissionMethod"] = transmission_method
+    if tag:
+        tags = ad.get("DocumentTags")
+        if not isinstance(tags, list):
+            tags = []
+        tags.append(tag)
+        ad["DocumentTags"] = tags
+    return new
+
+
 def upload_media_file(issuer_tin: str, internal_doc_id: str, file_path: str,
                       content_type: str = "", store_months: int = 1) -> Dict[str, Any]:
     """POST a single attachment to

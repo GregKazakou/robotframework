@@ -72,8 +72,8 @@ ${DATA_DIR}            ${CURDIR}/Data
 8.6 debit FNB form Generic                      8.6_Debit_FNB_Form.json                ${EP_INVOICE}    201         mark
     [Tags]    invoice    fnb
 
-# 1.1 B2G invoice Generic                   1.1_B2G.json                           ${EP_INVOICE}    201         mark
-#     [Tags]    invoice    b2g
+1.1 B2G invoice Generic                   1.1_B2G.json                           ${EP_INVOICE}    201         mark
+     [Tags]    invoice    b2g
 #   ↑ ενεργοποίησέ το όταν προσθέσεις το Automation/Data/1.1_B2G.json
 # ↓↓↓ Πρόσθεσε τα δικά σου παραδείγματα εδώ (json στο Automation/Data/) ↓↓↓
 
@@ -227,6 +227,8 @@ MEDIA UPLOAD - attach common file formats to a 1.1
     ${inv}=     api.Apply Unique Fields    ${inv}    MEDIA
     ${inv}=     api.Set Party Vats    ${inv}    ${ISSUER_VAT}    ${COUNTERPARTY_TIN}
     ${inv}=     api.Set Internal Document Id    ${inv}    ${idoc}
+    # TransmissionMethod=E + DocumentTag "attachments"
+    ${inv}=     api.Set Additional Details    ${inv}    transmission_method=E    tag=attachments
     ${res}=     Send Example    1.1 for media attachments    ${EP_INVOICE}    ${inv}    201    require=mark
 
     @{files}=    Create List
