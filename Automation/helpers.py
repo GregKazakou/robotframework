@@ -162,6 +162,7 @@ def _network_error_dict(path: str, payload: Dict[str, Any],
         "internal_id": payload.get("internalDocumentId", ""),
         "server_series": payload.get("series", ""),
         "url": "",
+        "authentication_code": "",
         "summary": msg,
         "raw_text": "",
         "body_dict": {},
@@ -193,6 +194,7 @@ def _parse_response(path: str, response: requests.Response,
     internal_id_returned = body.get("internalId") or ""
     server_series = body.get("series") or ""
     url = body.get("url") or ""
+    authentication_code = body.get("authenticationCode") or ""
 
     # Collect API error details (400s often carry 'errors' with empty 'message')
     errors = body.get("errors")
@@ -240,6 +242,7 @@ def _parse_response(path: str, response: requests.Response,
         "internal_id": internal_id_returned,
         "server_series": server_series,
         "url": url,
+        "authentication_code": authentication_code,
         "summary": " | ".join(parts),
         "raw_text": response.text,
         "body_dict": body,
@@ -516,6 +519,40 @@ def upload_media_file(issuer_tin: str, internal_doc_id: str, file_path: str,
     }
     _log_api_call("POST", f"/media/upload ({name})", result, {})
     return result
+
+
+def fetch_attachments(doc_url: str, issuer_tin: str, authentication_code: str,
+                      timeout: int = 60) -> List[str]:
+    """Return the originalName list of attachments the portal shows for a
+    document, via /api/InvoiceAttachments/GetAttachments (same host as the
+    document url)."""
+    import urllib.parse as _u
+    parts = _u.urlsplit(doc_url or "")
+    base = f"{parts.scheme}://{parts.netloc}"
+    url = base + "/api/InvoiceAttachments/GetAttachments"
+    resp = requests.get(
+        url, params={"authenticationCode": authentication_code, "issuerTin": issuer_tin},
+        timeout=timeout,
+    )
+    try:
+        data = resp.json()
+    except Exception:
+        data = []
+    return [a.get("originalName") for a in data if isinstance(a, dict) and a.get("originalName")]
+
+
+def assert_attachments_on_portal(doc_url: str, issuer_tin: str,
+                                 authentication_code: str, expected_names) -> str:
+    """Assert every expected filename appears in the portal's attachment list."""
+    expected = [str(n) for n in expected_names]
+    found = fetch_attachments(doc_url, issuer_tin, authentication_code)
+    found_set = set(found)
+    missing = [n for n in expected if n not in found_set]
+    if missing:
+        raise AssertionError(
+            f"Portal attachments mismatch: missing {missing}; found {found}"
+        )
+    return f"portal shows {len(expected)} attachments: {found}"
 
 
 def set_delivery_note_marks(payload: Dict[str, Any], marks) -> Dict[str, Any]:

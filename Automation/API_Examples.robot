@@ -217,9 +217,9 @@ MEDIA UPLOAD - attach common file formats to a 1.1
     [Documentation]    Έκδοση 1.1 με γνωστό InternalDocumentId, μετά upload
     ...                συνημμένων διαφόρων μορφών μέσω
     ...                /media/upload/{issuerTIN}/{InternalDocumentId}.
-    ...                Έλεγχος: το response κάθε upload είναι success=true.
-    ...                ΣΗΜ.: η downloadable σελίδα του portal (SPA) ΔΕΝ εμφανίζει
-    ...                τα συνημμένα — επαληθεύουμε από το API response.
+    ...                Έλεγχος: (1) κάθε upload response success=true, ΚΑΙ
+    ...                (2) το portal τα εμφανίζει — επαλήθευση μέσω
+    ...                /api/InvoiceAttachments/GetAttachments (τα originalName).
     [Template]    NONE
     [Tags]        invoice    media    upload
     ${idoc}=    Set Variable    APIEX-MEDIA-${RUN_STAMP}
@@ -240,7 +240,12 @@ MEDIA UPLOAD - attach common file formats to a 1.1
         ...    msg=Media upload απέτυχε για ${f}: HTTP ${r}[status_code] ${r}[message]
         Log    Attached ${f} -> ${r}[summary]    INFO
     END
-    Set Test Message    *HTML* <br>1.1 mark=${res.mark} · 8 attachments uploaded · <a href="${res.url}">${res.url}</a>    append=${True}
+
+    # Επαλήθευση: το portal εμφανίζει και τα 8 συνημμένα
+    ${note}=    api.Assert Attachments On Portal    ${res.url}    ${ISSUER_VAT}
+    ...         ${res.authentication_code}    ${files}
+    Log    ${note}    INFO
+    Set Test Message    *HTML* <br>1.1 mark=${res.mark} · 8 attachments verified on portal · <a href="${res.url}">${res.url}</a>    append=${True}
 
 
 # ── Inline παράδειγμα (χτίζεις το JSON στο test, χωρίς νέο αρχείο) ─────────────
