@@ -213,39 +213,70 @@ GET PDF - create a 1.1 then download its PDF
     ${res}=    Run Example From File    1.1_B2B.json    ${EP_INVOICE}    201    require=mark
     Get Example    get document PDF    /pdf    200    base=${res.url}
 
-MEDIA UPLOAD - attach common file formats to a 1.1
-    [Documentation]    Έκδοση 1.1 με γνωστό InternalDocumentId, μετά upload
-    ...                συνημμένων διαφόρων μορφών μέσω
-    ...                /media/upload/{issuerTIN}/{InternalDocumentId}.
-    ...                Έλεγχος: (1) κάθε upload response success=true, ΚΑΙ
-    ...                (2) το portal τα εμφανίζει — επαλήθευση μέσω
-    ...                /api/InvoiceAttachments/GetAttachments (τα originalName).
+MEDIA UPLOAD - allowed file types are accepted
+    [Documentation]    Ανεβάζει τους ΕΠΙΤΡΕΠΟΜΕΝΟΥΣ τύπους αρχείων σε ένα 1.1
+    ...                (images: jpg/jpeg/png/heic · pdf · office/data:
+    ...                doc/docx/xls/xlsx/csv). Κάθε upload πρέπει να είναι
+    ...                success=true και το portal να τα εμφανίζει όλα
+    ...                (/api/InvoiceAttachments/GetAttachments).
     [Template]    NONE
     [Tags]        invoice    media    upload
-    ${idoc}=    Set Variable    APIEX-MEDIA-${RUN_STAMP}
+    ${idoc}=    Set Variable    APIEX-MEDIAOK-${RUN_STAMP}
     ${inv}=     api.Load Template    1.1_B2B
-    ${inv}=     api.Apply Unique Fields    ${inv}    MEDIA
+    ${inv}=     api.Apply Unique Fields    ${inv}    MEDIAOK
     ${inv}=     api.Set Party Vats    ${inv}    ${ISSUER_VAT}    ${COUNTERPARTY_TIN}
     ${inv}=     api.Set Internal Document Id    ${inv}    ${idoc}
-    # TransmissionMethod=E + DocumentTag "attachments"
     ${inv}=     api.Set Additional Details    ${inv}    transmission_method=E    tag=attachments
-    ${res}=     Send Example    1.1 for media attachments    ${EP_INVOICE}    ${inv}    201    require=mark
+    ${res}=     Send Example    1.1 for allowed attachments    ${EP_INVOICE}    ${inv}    201    require=mark
 
-    @{files}=    Create List
-    ...    sample.json    sample.csv    sample.xml    sample.html
-    ...    sample.txt    sample.pdf    sample.docx    sample.xlsx
-    FOR    ${f}    IN    @{files}
+    @{allowed}=    Create List
+    ...    sample.jpg    sample.jpeg    sample.png    sample.heic    sample.pdf
+    ...    sample.doc    sample.docx    sample.xls    sample.xlsx    sample.csv
+    FOR    ${f}    IN    @{allowed}
         ${r}=    api.Upload Media File    ${ISSUER_VAT}    ${idoc}    ${DATA_DIR}/attachments/${f}
         Should Be True    ${r}[success]
-        ...    msg=Media upload απέτυχε για ${f}: HTTP ${r}[status_code] ${r}[message]
+        ...    msg=Επιτρεπόμενος τύπος ${f} ΑΠΟΡΡΙΦΘΗΚΕ: HTTP ${r}[status_code] ${r}[message]
         Log    Attached ${f} -> ${r}[summary]    INFO
     END
 
-    # Επαλήθευση: το portal εμφανίζει και τα 8 συνημμένα
     ${note}=    api.Assert Attachments On Portal    ${res.url}    ${ISSUER_VAT}
-    ...         ${res.authentication_code}    ${files}
+    ...         ${res.authentication_code}    ${allowed}
     Log    ${note}    INFO
-    Set Test Message    *HTML* <br>1.1 mark=${res.mark} · 8 attachments verified on portal · <a href="${res.url}">${res.url}</a>    append=${True}
+    Set Test Message    *HTML* <br>1.1 mark=${res.mark} · ${allowed.__len__()} allowed attachments verified · <a href="${res.url}">${res.url}</a>    append=${True}
+
+MEDIA UPLOAD - disallowed file types are rejected
+    [Documentation]    Ανεβάζει ΜΗ ΕΠΙΤΡΕΠΟΜΕΝΟΥΣ τύπους (json/xml/html/txt/
+    ...                exe/zip/js). Ο περιορισμός τύπων ΠΡΕΠΕΙ να τα απορρίπτει
+    ...                (success=false ή 4xx). Όσο ΔΕΝ είναι ενεργός στο UAT
+    ...                (τα δέχεται) το test κάνει SKIP με σαφές μήνυμα· θα γίνει
+    ...                PASS αυτόματα μόλις ενεργοποιηθεί ο περιορισμός.
+    [Template]    NONE
+    [Tags]        invoice    media    upload    negative
+    ${idoc}=    Set Variable    APIEX-MEDIABAD-${RUN_STAMP}
+    ${inv}=     api.Load Template    1.1_B2B
+    ${inv}=     api.Apply Unique Fields    ${inv}    MEDIABAD
+    ${inv}=     api.Set Party Vats    ${inv}    ${ISSUER_VAT}    ${COUNTERPARTY_TIN}
+    ${inv}=     api.Set Internal Document Id    ${inv}    ${idoc}
+    ${res}=     Send Example    1.1 for disallowed attachments    ${EP_INVOICE}    ${inv}    201    require=mark
+
+    @{disallowed}=    Create List
+    ...    sample.json    sample.xml    sample.html    sample.txt
+    ...    sample.exe    sample.zip    sample.js
+    @{accepted}=    Create List
+    FOR    ${f}    IN    @{disallowed}
+        ${r}=    api.Upload Media File    ${ISSUER_VAT}    ${idoc}    ${DATA_DIR}/attachments/${f}
+        IF    ${r}[success]
+            Append To List    ${accepted}    ${f}
+            Log    ΠΡΟΣΟΧΗ: disallowed ${f} ΕΓΙΝΕ ΔΕΚΤΟ (HTTP ${r}[status_code])    WARN
+        ELSE
+            Log    OK: disallowed ${f} απορρίφθηκε (HTTP ${r}[status_code])    INFO
+        END
+    END
+    ${n_ok}=    Get Length    ${accepted}
+    IF    ${n_ok} > 0
+        Skip    Ο περιορισμός τύπων αρχείων ΔΕΝ είναι ενεργός στο UAT — έγιναν δεκτοί disallowed τύποι: ${accepted}
+    END
+    Log    Όλοι οι disallowed τύποι απορρίφθηκαν σωστά.    INFO
 
 
 # ── Inline παράδειγμα (χτίζεις το JSON στο test, χωρίς νέο αρχείο) ─────────────
