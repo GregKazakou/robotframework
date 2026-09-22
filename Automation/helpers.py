@@ -399,7 +399,8 @@ def apply_unique_fields(payload: Dict[str, Any], prefix: str = "EX") -> Dict[str
     new = copy.deepcopy(payload)
     now = datetime.datetime.now()
     stamp = now.strftime("%y%m%d%H%M%S") + f"{now.microsecond // 1000:03d}"
-    series = f"{_series_prefix_from_context(prefix)}-{stamp}"
+    prefix_slug = _series_prefix_from_context(prefix)
+    series = f"{prefix_slug}-{stamp}"
     today = now.strftime("%Y-%m-%d")
     guid = str(uuid.uuid4())
 
@@ -427,6 +428,18 @@ def apply_unique_fields(payload: Dict[str, Any], prefix: str = "EX") -> Dict[str
         for k in ("dispatchDate", "dispatchtime", "DispatchDate", "DispatchTime"):
             if k in dist:
                 dist[k] = iso_now
+
+    # Tag the document with the running test's slug (a DocumentTag related to
+    # the test), so it's easy to spot which case created it. Only for document
+    # payloads that carry AdditionalDetails.
+    ad = new.get("AdditionalDetails")
+    if isinstance(ad, dict):
+        tags = ad.get("DocumentTags")
+        if not isinstance(tags, list):
+            tags = []
+        if prefix_slug and prefix_slug not in tags:
+            tags.append(prefix_slug)
+        ad["DocumentTags"] = tags
 
     return new
 
