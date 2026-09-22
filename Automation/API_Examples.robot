@@ -279,6 +279,45 @@ MEDIA UPLOAD - disallowed file types are rejected
     Log    Όλοι οι disallowed τύποι απορρίφθηκαν σωστά.    INFO
 
 
+# ── 9.3 Delivery Note: transport flags (nonObligated / eTransport / WDT) ──────
+#    Κάθε flag: "true"/"false"/"null"· κενό = default template. Όπου
+#    nonObligated/withoutDigital=true, το CounterParty VAT γίνεται 000000000.
+DN FLAGS - nonObligated=true, sendToEtransport=false
+    [Template]    NONE
+    [Tags]        deliverynote    flags
+    Issue 9.3 With Flags    9.3 nonOblig=T · eTransport=F
+    ...    non_obligated=true    etransport=false
+
+DN FLAGS - nonObligated=false, sendToEtransport=true
+    [Template]    NONE
+    [Tags]        deliverynote    flags
+    Issue 9.3 With Flags    9.3 nonOblig=F · eTransport=T
+    ...    non_obligated=false    etransport=true
+
+DN FLAGS - nonObligated=false, sendToEtransport=false
+    [Template]    NONE
+    [Tags]        deliverynote    flags
+    Issue 9.3 With Flags    9.3 nonOblig=F · eTransport=F
+    ...    non_obligated=false    etransport=false
+
+DN FLAGS - sendToEtransport=false only
+    [Template]    NONE
+    [Tags]        deliverynote    flags
+    Issue 9.3 With Flags    9.3 eTransport=F (only)    etransport=false
+
+DN FLAGS - withoutDigitalTransportTracking=true, sendToEtransport=false
+    [Template]    NONE
+    [Tags]        deliverynote    flags
+    Issue 9.3 With Flags    9.3 WDT=T · eTransport=F
+    ...    without_digital=true    etransport=false
+
+DN FLAGS - sendToEtransport=null, nonObligated=false, WDT=false
+    [Template]    NONE
+    [Tags]        deliverynote    flags
+    Issue 9.3 With Flags    9.3 eTransport=null · nonOblig=F · WDT=F
+    ...    non_obligated=false    without_digital=false    etransport=null
+
+
 # ── Inline παράδειγμα (χτίζεις το JSON στο test, χωρίς νέο αρχείο) ─────────────
 #    Φορτώνει ένα template και το πειράζει inline με Deep Merge. Έτσι βλέπεις
 #    πώς να αλλάζεις μόνο ό,τι θες, χωρίς να αντιγράφεις όλο το JSON.
@@ -303,6 +342,18 @@ INLINE - signpos via template + overrides
 
 
 *** Keywords ***
+Issue 9.3 With Flags
+    [Documentation]    Εκδίδει 9.3 δελτίο αποστολής με τα δοσμένα transport
+    ...                flags. Κάθε flag: "true"/"false"/"null"· κενό = default.
+    [Arguments]    ${label}    ${non_obligated}=${EMPTY}    ${etransport}=${EMPTY}    ${without_digital}=${EMPTY}
+    ${dn}=    api.Load Template    9.3_Sales_20lines
+    ${dn}=    api.Apply Unique Fields    ${dn}    DNF
+    ${dn}=    api.Set Party Vats    ${dn}    ${ISSUER_VAT}    ${COUNTERPARTY_TIN}
+    ${dn}=    api.Set Delivery Flags    ${dn}
+    ...    non_obligated=${non_obligated}    send_to_etransport=${etransport}    without_digital=${without_digital}
+    ${res}=   Send Example    ${label}    ${EP_INVOICE}    ${dn}    201    require=mark
+    RETURN    ${res}
+
 Setup Example Client
     api.Configure Client    ${BASE_URL}    ${API_KEY}    ${120}
     ${today}=      Get Current Date    result_format=%Y-%m-%d

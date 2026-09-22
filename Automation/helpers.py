@@ -555,6 +555,40 @@ def assert_attachments_on_portal(doc_url: str, issuer_tin: str,
     return f"portal shows {len(expected)} attachments: {found}"
 
 
+def set_delivery_flags(payload: Dict[str, Any],
+                       non_obligated: str = "",
+                       send_to_etransport: str = "",
+                       without_digital: str = "",
+                       non_obligated_vat: str = "000000000") -> Dict[str, Any]:
+    """Return a copy of a delivery-note payload with the transport flags set.
+    Each flag accepts "true"/"false"/"null"; an empty string leaves the
+    template's value untouched. When nonObligatedRecipient or
+    withoutDigitalTransportTracking end up true, the CounterParty VAT is set
+    to 000000000 (AADE requires it — otherwise error 289)."""
+    def coerce(raw):
+        s = str(raw).strip().lower()
+        if s in ("true", "1", "yes"):
+            return True
+        if s in ("false", "0", "no"):
+            return False
+        return None  # "null" / "none"
+
+    new = copy.deepcopy(payload)
+    if str(non_obligated) != "":
+        new["nonObligatedRecipient"] = coerce(non_obligated)
+    if str(without_digital) != "":
+        new["withoutDigitalTransportTracking"] = coerce(without_digital)
+    if str(send_to_etransport) != "":
+        new["sendToEtransport"] = coerce(send_to_etransport)
+
+    if new.get("nonObligatedRecipient") is True or \
+            new.get("withoutDigitalTransportTracking") is True:
+        cp = new.get("CounterParty")
+        if isinstance(cp, dict):
+            cp["Vat"] = non_obligated_vat
+    return new
+
+
 def set_delivery_note_marks(payload: Dict[str, Any], marks) -> Dict[str, Any]:
     """Return a copy of payload with deliveryNoteMarks set to the given marks.
     The provider maps this input field to the myDATA XML element
