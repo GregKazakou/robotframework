@@ -558,13 +558,12 @@ def assert_attachments_on_portal(doc_url: str, issuer_tin: str,
 def set_delivery_flags(payload: Dict[str, Any],
                        non_obligated: str = "",
                        send_to_etransport: str = "",
-                       without_digital: str = "",
-                       non_obligated_vat: str = "000000000") -> Dict[str, Any]:
+                       without_digital: str = "") -> Dict[str, Any]:
     """Return a copy of a delivery-note payload with the transport flags set.
     Each flag accepts "true"/"false"/"null"; an empty string leaves the
-    template's value untouched. When nonObligatedRecipient or
-    withoutDigitalTransportTracking end up true, the CounterParty VAT is set
-    to 000000000 (AADE requires it — otherwise error 289)."""
+    template's value untouched. The existing CounterParty VAT is kept as-is.
+    For every flag that ends up TRUE, a DocumentTag with the flag's name is
+    appended to AdditionalDetails.DocumentTags (e.g. "nonObligatedRecipient")."""
     def coerce(raw):
         s = str(raw).strip().lower()
         if s in ("true", "1", "yes"):
@@ -581,11 +580,20 @@ def set_delivery_flags(payload: Dict[str, Any],
     if str(send_to_etransport) != "":
         new["sendToEtransport"] = coerce(send_to_etransport)
 
-    if new.get("nonObligatedRecipient") is True or \
-            new.get("withoutDigitalTransportTracking") is True:
-        cp = new.get("CounterParty")
-        if isinstance(cp, dict):
-            cp["Vat"] = non_obligated_vat
+    # DocumentTag for each flag that is true
+    true_tags = [k for k in ("nonObligatedRecipient",
+                             "withoutDigitalTransportTracking",
+                             "sendToEtransport") if new.get(k) is True]
+    if true_tags:
+        ad = new.get("AdditionalDetails")
+        if not isinstance(ad, dict):
+            ad = {}
+            new["AdditionalDetails"] = ad
+        tags = ad.get("DocumentTags")
+        if not isinstance(tags, list):
+            tags = []
+        tags.extend(true_tags)
+        ad["DocumentTags"] = tags
     return new
 
 
