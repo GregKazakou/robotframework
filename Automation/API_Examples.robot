@@ -281,7 +281,7 @@ MEDIA UPLOAD - disallowed file types are rejected
 
 # ── 9.3 Delivery Note: transport flags (nonObligated / eTransport / WDT) ──────
 #    Κάθε flag: "true"/"false"/"null"· κενό = default template. Όπου
-#    nonObligated/withoutDigital=true, το CounterParty VAT γίνεται 000000000.
+#    nonObligated/withoutDigital=true.
 DN FLAGS - nonObligated=true, sendToEtransport=false
     [Template]    NONE
     [Tags]        deliverynote    flags
@@ -351,6 +351,9 @@ Issue 9.3 With Flags
     ${dn}=    api.Set Party Vats    ${dn}    ${ISSUER_VAT}    ${COUNTERPARTY_TIN}
     ${dn}=    api.Set Delivery Flags    ${dn}
     ...    non_obligated=${non_obligated}    send_to_etransport=${etransport}    without_digital=${without_digital}
+    # DistributionDetails transport fields
+    ${dn}=    api.Set Distribution Details    ${dn}
+    ...    shipping_method=Truck    transport_type_code=1    p_number=TKN8181
     ${res}=   Send Example    ${label}    ${EP_INVOICE}    ${dn}    201    require=mark
     RETURN    ${res}
 

@@ -568,6 +568,27 @@ def assert_attachments_on_portal(doc_url: str, issuer_tin: str,
     return f"portal shows {len(expected)} attachments: {found}"
 
 
+def set_distribution_details(payload: Dict[str, Any],
+                             shipping_method: str = "",
+                             transport_type_code: str = "",
+                             p_number: str = "") -> Dict[str, Any]:
+    """Return a copy with the given DistributionDetails transport fields set
+    (only the non-empty ones): shippingMethod, transportTypeCode (int),
+    pNumber."""
+    new = copy.deepcopy(payload)
+    dist = new.get("DistributionDetails")
+    if not isinstance(dist, dict):
+        dist = {}
+        new["DistributionDetails"] = dist
+    if str(shipping_method) != "":
+        dist["shippingMethod"] = shipping_method
+    if str(transport_type_code) != "":
+        dist["transportTypeCode"] = int(transport_type_code)
+    if str(p_number) != "":
+        dist["pNumber"] = p_number
+    return new
+
+
 def set_delivery_flags(payload: Dict[str, Any],
                        non_obligated: str = "",
                        send_to_etransport: str = "",
