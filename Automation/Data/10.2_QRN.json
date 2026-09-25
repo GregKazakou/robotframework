@@ -1,0 +1,165 @@
+{
+    "IsDelayedCode": 0,
+    "iaprSignPolicy": 2,
+    "InvoiceType": "Quantity Receipt Note 10.2",
+    "InvoiceTypeCode": "10.2",
+    "DocumentTypeCode": "INVOICE",
+    "OrderNumber": "ORDER01{{incrementalCounter}}",
+    "Series": "QRNV2",
+    "Number": "{{incrementalCounter}}",
+    "DateIssued": "{{currentdate}}",
+    "correlatedInvoices": [],
+    "deliveryNoteMarks": [],
+    "isReverseDeliveryNote": false,
+    "isDeliveryNote": false,
+    "isFuelInvoice": false,
+    "Issuer": {
+        "RegisteredName": "issuer's name",
+        "contactPerson": "Issuer Contact Person",
+        "Vat": "{{issuerTIN}}",
+        "TaxOffice": "issuer's Tax Office",
+        "Phones": [
+            "2000000000"
+        ],
+        "Faxes": [
+            "2000000000"
+        ],
+        "Address": {
+            "CountryCode": "GR",
+            "City": "issuer's city",
+            "Street": "issuer's street",
+            "Number": "issuer's number",
+            "Postal": "issuer's postal code"
+        },
+        "BranchCode": 0
+    },
+    "CounterParty": {
+        "RegisteredName": "Recipient's name",
+        "contactPerson": "Recipient's Contact Person",
+        "Vat": "{{recipientTIN}}",
+        "TaxOffice": "Recipient's Tax Office",
+        "Phones": [
+            "200000000"
+        ],
+        "Address": {
+            "CountryCode": "GR",
+            "City": "Recipient's city",
+            "Street": "Recipient's street",
+            "Number": "Recipient's number",
+            "Postal": "Recipient's postal code"
+        },
+        "BranchCode": 0
+    },
+    "DistributionDetails": {
+        "InternalDocumentId": "InternalDocumentId{{incrementalCounter}}{{currentdate}}",
+        "receivingNotePurposeCode": 1,
+        "otherReceivingNotePurposeTitle": "Issuer Not Obliged to Issue",
+        "vehileNumber": "P999",
+        "reverseDeliveryNotePurpose": null,
+        "totalQuantity": 101.00,
+        "totalPackages": 2,
+        "toWeigh": "false",
+        "packingDeclarations": [
+            {
+                "packagingType": "Box",
+                "packagingTypeCode": 3,
+                "quantity": 1
+            },
+            {
+                "packagingType": "Shipping container",
+                "packagingTypeCode": 6,
+                "quantity": 1
+            }
+        ],
+        "DeliveryOriginDetails": {
+            "remarks": "loading name",
+            "shippingBranchCode": 10,
+            "Address": {
+                "City": "loading city",
+                "Street": "loading street",
+                "Number": "loading number",
+                "Postal": "loading postal code"
+            }
+        },
+        "DeliveryDestinationDetails": {
+            "remarks": "delivery name",
+            "shippingBranchCode": 0,
+            "Address": {
+                "City": "delivery city",
+                "Street": "delivery street",
+                "Number": "delivery number",
+                "Postal": "delivery postal code",
+                "GLN": "delivery GLN"
+            }
+        }
+    },
+    "AdditionalDetails": {
+        "TransmissionMethod": "A",
+        "accountingDepartmentEmails": [
+            "email@impact.gr"
+        ],
+        "documentTemplate": "defualt_deliverynote",
+        "customerCellNumbers": [
+            "+30000000000"
+        ],
+        "sendAsPdf": false,
+        "pdfNotificationEmails": [
+            "email@impact.gr"
+        ],
+        "DocumentTags": [
+            "DN",
+            "10.2",
+            "QRN"
+        ]
+    },
+    "details": [
+        {
+            "lineNo": 1,
+            "code": "000001",
+            "itemCodification": "Barcode",
+            "descriptions": [
+                "Item descriptions"
+            ],
+            "remarks": "Item remarks",
+            "measurementUnit": "KG",
+            "measurementUnitCode": 2,
+            "quantity": 100.0,
+            "quantityIn15Deg": null,
+            "vatCategoryCode": 8,
+            "taricNo": "0123456789",
+            "fuelCode": null,
+            "recordTypeCode": 0,
+            "movePurposeLineCode": null,
+            "otherMovePurposeLineTitle": null,
+            "IncomeClassification": {
+                "ClassificationCategoryCode": "category3"
+            }
+        },
+        {
+            "lineNo": 2,
+            "code": "000002",
+            "itemCodification": "Barcode",
+            "descriptions": [
+                "Item descriptions"
+            ],
+            "remarks": "Item remarks",
+            "measurementUnit": "Piece",
+            "measurementUnitCode": 1,
+            "quantity": 1.0,
+            "quantityIn15Deg": 0,
+            "vatCategoryCode": 8,
+            "taricNo": "0123456789",
+            "fuelCode": null,
+            "recordTypeCode": 0,
+            "movePurposeLineCode": null,
+            "otherMovePurposeLineTitle": null,
+            "IncomeClassification": {
+                "ClassificationCategoryCode": "category3"
+            }
+        }
+    ],
+    "summaries": {},
+    "MiscellaneousData": {
+        "Comments1": "Isuuer remarks"
+    }
+}

@@ -346,6 +346,30 @@ SPECIAL CAT 5 - complex domestic-foreign, VAT-exempt art.8 (EL/EN labels)
     Set Test Message    *HTML* <br>1.1 SpecialCat5 mark=${res.mark} · EL/EN labels verified · <a href="${res.url}">${res.url}</a>    append=${True}
 
 
+QRN 10.2 - receiving note "Not Obliged to Issue" (EL/EN labels)
+    [Documentation]    10.2 Δελτίο Ποσοτικής Παραλαβής με
+    ...                receivingNotePurposeCode=1. Ελέγχει ότι το portal
+    ...                εμφανίζει το label «ΔΠΠ - Μη Υπόχρεος Έκδοσης» (el) και
+    ...                τη μετάφρασή του «Receiving Note - Not Obliged to Issue»
+    ...                (en).
+    [Template]    NONE
+    [Tags]        deliverynote    qrn    translation
+    ${qrn}=    api.Load Template    10.2_QRN
+    ${qrn}=    api.Apply Unique Fields    ${qrn}    QRN102
+    ${qrn}=    api.Set Party Vats    ${qrn}    ${ISSUER_VAT}    ${COUNTERPARTY_TIN}
+    ${res}=    Send Example    10.2 QRN (Not Obliged to Issue)    ${EP_INVOICE}    ${qrn}    201    require=mark
+
+    ${el}=    Create List    ΔΠΠ - Μη Υπόχρεος Έκδοσης
+    ${note_el}=    api.Assert Portal Contains    ${res.url}    el    ${el}
+    Log    ${note_el}    INFO
+
+    ${en}=    Create List    Receiving Note - Not Obliged to Issue
+    ${note_en}=    api.Assert Portal Contains    ${res.url}    en    ${en}
+    Log    ${note_en}    INFO
+
+    Set Test Message    *HTML* <br>10.2 QRN mark=${res.mark} · EL/EN "Not Obliged" label verified · <a href="${res.url}">${res.url}</a>    append=${True}
+
+
 # ── Inline παράδειγμα (χτίζεις το JSON στο test, χωρίς νέο αρχείο) ─────────────
 #    Φορτώνει ένα template και το πειράζει inline με Deep Merge. Έτσι βλέπεις
 #    πώς να αλλάζεις μόνο ό,τι θες, χωρίς να αντιγράφεις όλο το JSON.
