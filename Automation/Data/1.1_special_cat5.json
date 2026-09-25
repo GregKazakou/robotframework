@@ -1,0 +1,173 @@
+{
+    "IAPRSignPolicy": 2,
+    "CurrencyCode": "EUR",
+    "InvoiceType": "Sales Invoice",
+    "InvoiceTypeCode": "1.1",
+    "DocumentType": "Sales Invoice",
+    "DocumentTypeCode": "INVOICE",
+    "SpecialInvoiceCategory": 5,
+    "OrderNumber": "",
+    "Series": "0",
+    "number": "1{{incrementalCounter}}",
+    "DateIssued": "{{currentdate}}",
+    "Issuer": {
+        "RegisteredName": "issuer's name",
+        "BrandName": "issuer's brand",
+        "Vat": "EL154697391",
+        "TaxOffice": "issuer's Tax Office",
+        "Phones": [
+            "2000000000"
+        ],
+        "Faxes": [
+            "2000000000"
+        ],
+        "Address": {
+            "CountryCode": "GR",
+            "City": "issuer's city",
+            "Street": "issuer's street",
+            "Number": "issuer's number",
+            "Postal": "issuer's postal code"
+        },
+        "BranchCode": 0
+    },
+    "CounterParty": {
+        "RegisteredName": "counter party's name SELL TO",
+        "BrandName": "counter party's name",
+        "Vat": "ES00000089",
+        "TaxOffice": "counter party's Tax Office",
+        "Phones": [
+            "20000000"
+        ],
+        "Address": {
+            "CountryCode": "ES",
+            "City": "counter party's city",
+            "Street": "counter party's street",
+            "Number": "counter party's number",
+            "Postal": "counter party's postal code"
+        },
+        "BranchCode": 0
+    },
+    "Recipient": {
+        "RegisteredName": "Recipient's name SHIP TO",
+        "BrandName": "Recipient's brand",
+        "Vat": "MD090025537",
+        "TaxOffice": "Recipient's Tax Office",
+        "Phones": [
+            "20000000"
+        ],
+        "Address": {
+            "CountryCode": "MD",
+            "City": "Recipient's city",
+            "Street": "Recipient's street",
+            "Number": "Recipient's number",
+            "Postal": "Recipient's postal code"
+        },
+        "BranchCode": 0
+    },
+    "Banks": [
+        {
+            "Name": "bank",
+            "IBAN": "GR0000000000"
+        }
+    ],
+    "DistributionDetails": {
+        "InternalDocumentId": "z88996621{{incrementalCounter}}",
+        "movePurposeCode": 1,
+        "DeliveryDestinationDetails": {
+            "Address": {
+                "GLN": "",
+                "CountryCode": "MD",
+                "City": "Recipient's delivery",
+                "Street": "Recipient's delivery",
+                "Number": "Recipient's delivery",
+                "Postal": "Recipient's delivery"
+            },
+            "Remarks": "Recipient's delivery warehouse name DELIVERY TO"
+        }
+    },
+    "PaymentDetails": {
+        "PaymentMethods": [
+            {
+                "PaymentMethodType": "ΕΠΙ ΠΙΣΤΩΣΕΙ",
+                "PaymentMethodTypeCode": 5,
+                "amount": 2000
+            }
+        ]
+    },
+    "AdditionalDetails": {
+        "TransmissionMethod": "A",
+        "AvoidEmailGrouping": false,
+        "accountingDepartmentEmails": [
+            ""
+        ],
+        "DocumentTags": ["SpecialInvoiceCategory: 5", "VatExemptionCategoryCode"]
+    },
+    "Details": [
+        {
+            "LineNo": 1,
+            "ItemCodification": "",
+            "Code": "10-22-01-658",
+            "Descriptions": [
+                "προιον 1"
+            ],
+            "MeasurementUnit": "UNIT",
+            "MeasurementUnitCode": 1,
+            "Quantity": 1,
+            "UnitPrice": 1000,
+            "NetTotal": 1000,
+            "Total": 1000,
+            "VATTotal": 0,
+            "VatExemptionCategoryCode": 24,
+            "DiscountOption": true,
+            "VatCategory": "0%",
+            "VatCategoryCode": 7,
+            "IsInformative": false,
+            "IsHidden": false,
+            "RecordTypeCode": 0,
+            "IncomeClassification": {
+                "ClassificationTypeCode": "E3_561_007",
+                "ClassificationCategoryCode": "category1_1"
+            }
+        },
+        {
+            "LineNo": 2,
+            "ItemCodification": "",
+            "Code": "10-22-01-658-2",
+            "Descriptions": [
+                "προιον 2"
+            ],
+            "MeasurementUnit": "UNIT",
+            "MeasurementUnitCode": 1,
+            "Quantity": 1,
+            "UnitPrice": 1000,
+            "NetTotal": 1000,
+            "Total": 1000,
+            "VATTotal": 0,
+            "VatExemptionCategoryCode": 24,
+            "DiscountOption": true,
+            "VatCategory": "0%",
+            "VatCategoryCode": 7,
+            "IsInformative": false,
+            "IsHidden": false,
+            "RecordTypeCode": 0,
+            "IncomeClassification": {
+                "ClassificationTypeCode": "E3_561_007",
+                "ClassificationCategoryCode": "category1_1"
+            }
+        }
+    ],
+    "Summaries": {
+        "TotalNetAmount": 2000.00,
+        "TotalVATAmount": 0.00,
+        "TotalGrossValue": 2000.00
+    },
+    "VatAnalysis": [
+        {
+            "Name": "0.0",
+            "Percentage": 0,
+            "VatAmount": 0.00,
+            "UnderlyingValue": 2000
+        }
+    ],
+    "IsDelayedCode": 0
+}

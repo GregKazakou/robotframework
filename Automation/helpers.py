@@ -534,6 +534,17 @@ def upload_media_file(issuer_tin: str, internal_doc_id: str, file_path: str,
     return result
 
 
+def assert_portal_contains(doc_url: str, lang: str, expected) -> str:
+    """GET the portal document page in the given language (?lang=el|en) and
+    assert every expected substring (e.g. a translated label) is present."""
+    sep = "&" if "?" in (doc_url or "") else "?"
+    html = requests.get(f"{doc_url}{sep}lang={lang}", timeout=60).text
+    missing = [s for s in expected if s not in html]
+    if missing:
+        raise AssertionError(f"Portal (lang={lang}) missing label(s): {missing}")
+    return f"portal (lang={lang}) shows {len(list(expected))} label(s)"
+
+
 def fetch_attachments(doc_url: str, issuer_tin: str, authentication_code: str,
                       timeout: int = 60) -> List[str]:
     """Return the originalName list of attachments the portal shows for a

@@ -318,6 +318,34 @@ DN FLAGS - sendToEtransport=null, nonObligated=false, WDT=false
     ...    non_obligated=false    without_digital=false    etransport=null
 
 
+SPECIAL CAT 5 - complex domestic-foreign, VAT-exempt art.8 (EL/EN labels)
+    [Documentation]    1.1 με SpecialInvoiceCategory=5 (Σύνθετες συναλλαγές
+    ...                ημεδαπής–αλλοδαπής) και VatExemptionCategoryCode=24
+    ...                (Χωρίς ΦΠΑ – άρθρο 8). Ελέγχει ότι το portal εμφανίζει
+    ...                τις μεταφράσεις των labels ΚΑΙ στα Ελληνικά (?lang=el)
+    ...                ΚΑΙ στα Αγγλικά (?lang=en). Κρατά τα ES/MD VAT του
+    ...                template (χωρίς Set Party Vats).
+    [Template]    NONE
+    [Tags]        invoice    special-category    vat-exempt    translation
+    ${inv}=    api.Load Template    1.1_special_cat5
+    ${inv}=    api.Apply Unique Fields    ${inv}    SPECIALCAT5
+    ${res}=    Send Example    1.1 SpecialInvoiceCategory 5 (VAT-exempt art.8)    ${EP_INVOICE}    ${inv}    201    require=mark
+
+    ${el}=    Create List
+    ...    Χωρίς ΦΠΑ - άρθρο 8 του Κώδικα ΦΠΑ
+    ...    Σύνθετες συναλλαγές ημεδαπής – αλλοδαπής
+    ${note_el}=    api.Assert Portal Contains    ${res.url}    el    ${el}
+    Log    ${note_el}    INFO
+
+    ${en}=    Create List
+    ...    Without VAT - Article 8 of the VAT Code
+    ...    Complex Domestic – Foreign Transactions
+    ${note_en}=    api.Assert Portal Contains    ${res.url}    en    ${en}
+    Log    ${note_en}    INFO
+
+    Set Test Message    *HTML* <br>1.1 SpecialCat5 mark=${res.mark} · EL/EN labels verified · <a href="${res.url}">${res.url}</a>    append=${True}
+
+
 # ── Inline παράδειγμα (χτίζεις το JSON στο test, χωρίς νέο αρχείο) ─────────────
 #    Φορτώνει ένα template και το πειράζει inline με Deep Merge. Έτσι βλέπεις
 #    πώς να αλλάζεις μόνο ό,τι θες, χωρίς να αντιγράφεις όλο το JSON.
