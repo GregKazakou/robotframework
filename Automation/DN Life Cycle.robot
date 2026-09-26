@@ -282,7 +282,7 @@ TC 25 - Partial Simplified New Reverse DN
     Issue Delivery Note
     Register Transfer
     Confirm Delivery Outcome    outcome=FULL
-    Issue Delivery Note    reverse=${True}      # νέο 9.3 «Επιστροφή» προς αρχικό Εκδότη
+    Issue Delivery Note    reverse=${True}    reverse_purpose=1      # νέο 9.3 «Επιστροφή» προς αρχικό Εκδότη
 
 # ======================================================================
 # Ζ. Delivered by Carrier — αποτελέσματα
@@ -469,7 +469,7 @@ Current TC Series
 # ======================================================================
 Issue Delivery Note
     [Arguments]    ${type_code}=9.3    ${without_digital}=${False}    ${non_obligated}=${False}
-    ...            ${reverse}=${False}    ${counterparty_vat}=${EMPTY}
+    ...            ${reverse}=${False}    ${counterparty_vat}=${EMPTY}    ${reverse_purpose}=${NONE}
     [Documentation]    Δημιουργεί παραστατικό μέσω Provider. Θέτει ${LAST_MARK}/${LAST_QR}.
     ${payload}=    Copy Dictionary    ${TPL_9_3}    deepcopy=True
     ${number}=     Next Document Number
@@ -500,6 +500,14 @@ Issue Delivery Note
         IF    $cp is not None
             Set To Dictionary    ${cp}    Vat=${cp_vat}
             Log    Counterparty VAT -> ${cp_vat} (type=${type_code}, non_obligated=${non_obligated})
+        END
+    END
+    # Σκοπός Δελτίου Επιστροφής (§2.8): τίθεται στο DistributionDetails όταν ζητηθεί ρητά
+    IF    $reverse_purpose is not None
+        ${dist}=    Get From Dictionary    ${payload}    DistributionDetails    default=${NONE}
+        IF    $dist is not None
+            Set To Dictionary    ${dist}    reverseDeliveryNotePurpose=${reverse_purpose}
+            Log    DistributionDetails.reverseDeliveryNotePurpose -> ${reverse_purpose}
         END
     END
     Apply Dispatch DateTime    ${payload}    ${now}    ${number}
