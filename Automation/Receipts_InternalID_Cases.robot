@@ -95,6 +95,7 @@ Library           Collections
 Library           String
 Library           DateTime
 Library           OperatingSystem
+Library           ${EXECDIR}/Automation/helpers.py    WITH NAME    api
 Variables         ${EXECDIR}/config/credentials.py
 
 Suite Setup       Initialize Suite
@@ -194,6 +195,7 @@ Send Receipt
     ...    Content-Type=application/json
     ${response}=   POST On Session    einvoice    ${ENDPOINT}
     ...            json=${payload}    headers=${headers}    expected_status=any
+    api.Log Api Call Response    POST    ${ENDPOINT}    ${response}    ${payload}
     Log    Sent erp=${erp} series=${payload}[series] number=${payload}[number] internalDocumentId=${payload}[internalDocumentId] totalAmount=${payload}[totalAmount]
     Log    Status: ${response.status_code}
     Log    Body: ${response.text}

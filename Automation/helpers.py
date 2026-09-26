@@ -117,6 +117,45 @@ def _log_api_call(method: str, endpoint: str, result: Dict[str, Any],
         pass  # running outside Robot (e.g. unit tests)
 
 
+def _response_message(body: Any, response: Any) -> str:
+    """Best human-readable message from a response body: success `message`,
+    then `errorMessage`, then a joined `myDataErrors`, else the HTTP reason."""
+    if isinstance(body, dict):
+        msg = body.get("message") or body.get("errorMessage") or ""
+        if not msg:
+            errs = body.get("myDataErrors") or []
+            if isinstance(errs, list) and errs:
+                msg = " | ".join(
+                    f"[{e.get('key', '?')}] {e.get('value', '')}"
+                    for e in errs if isinstance(e, dict))
+        if msg:
+            return str(msg)
+    return getattr(response, "reason", "") or ""
+
+
+def log_api_call_response(method: str, endpoint: str, response: Any,
+                          payload: Optional[Dict[str, Any]] = None) -> None:
+    """Emit the same [[APICALL]] summary line used by post_to, but from a raw
+    `requests` Response. For suites that call the API through RequestsLibrary
+    (e.g. FNB, DN Life Cycle) instead of post_to, so the email report shows a
+    full row (endpoint · status · type · series · mark · message) for every
+    request rather than a bare 'POST → 201'."""
+    try:
+        body = response.json()
+    except Exception:
+        body = {}
+    mark = ""
+    if isinstance(body, dict):
+        mark = body.get("mark") or body.get("Mark") or ""
+    result = {
+        "status_code": getattr(response, "status_code", ""),
+        "mark": mark,
+        "message": _response_message(body, response),
+    }
+    _log_api_call(method, endpoint, result,
+                  payload if isinstance(payload, dict) else {})
+
+
 def get_to(path: str,
            query: Optional[Dict[str, str]] = None,
            base_url: Optional[str] = None) -> Dict[str, Any]:

@@ -23,6 +23,7 @@ Library             RequestsLibrary
 Library             Collections
 Library             String
 Library             resources/NotificationPayloads.py
+Library             ${EXECDIR}/Automation/helpers.py    WITH NAME    api
 Variables           ${EXECDIR}/config/credentials.py
 
 Suite Setup         Initialise Notification Suite
@@ -368,6 +369,7 @@ Submit Notification Scenario
 
     ${path}=    Get Endpoint Path    ${endpoint}
     ${resp}=    POST On Session    ${SESSION}    ${path}    json=${body}    expected_status=any
+    api.Log Api Call Response    POST    ${path}    ${resp}    ${body}
 
     Verify Submission Accepted    ${resp}    ${endpoint}
 
@@ -385,6 +387,7 @@ Submit Invalid Recipient Scenario
     ...    recipient_mode=invalid
     ${path}=    Get Endpoint Path    ${endpoint}
     ${resp}=    POST On Session    ${SESSION}    ${path}    json=${body}    expected_status=any
+    api.Log Api Call Response    POST    ${path}    ${resp}    ${body}
     Should Be Equal As Integers    ${resp.status_code}    400
     ...    msg=[${endpoint}] Ανέμενα HTTP 400 (απόρριψη άκυρου παραλήπτη) αλλά πήρα ${resp.status_code}: ${resp.text}
     Should Contain    ${resp.text}    Invalid
@@ -401,6 +404,7 @@ Submit Grcore Scenario
     ${headers}=    Create Dictionary    APIKey=${API_KEY}    Content-Type=text/plain
     ${resp}=    POST On Session    ${SESSION}    ${path}
     ...    data=${body}    headers=${headers}    expected_status=any
+    api.Log Api Call Response    POST    ${path}    ${resp}
     Verify Submission Accepted    ${resp}    grcore
 
 Cancel Delivery Note With Emails
@@ -413,6 +417,7 @@ Cancel Delivery Note With Emails
     ...    endpoint=cancel_dn    accounting_emails=${with_emails}
     ${path}=    Get Endpoint Path    cancel_dn
     ${resp}=    POST On Session    ${SESSION}    ${path}    json=${body}    expected_status=any
+    api.Log Api Call Response    POST    ${path}    ${resp}    ${body}
     Should Be True    ${resp.status_code} < 400
     ...    msg=Η ακύρωση απέτυχε: HTTP ${resp.status_code} - ${resp.text}
 

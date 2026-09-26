@@ -25,6 +25,7 @@ Library           Collections
 Library           OperatingSystem
 Library           DateTime
 Library           String
+Library           ${EXECDIR}/Automation/helpers.py    WITH NAME    api
 Variables         ${EXECDIR}/config/credentials.py
 Suite Setup       Setup Suite
 Test Setup        Reset Test Context
@@ -513,6 +514,7 @@ Issue Delivery Note
     Apply Dispatch DateTime    ${payload}    ${now}    ${number}
     ${resp}=    POST On Session    provider_issuer    /Invoice/json    json=${payload}    expected_status=any
     Log Response    ${resp}    Create ${type_code}
+    api.Log Api Call Response    POST    /Invoice/json    ${resp}    ${payload}
     IF    ${resp.status_code} >= 400
         Fail    Create ${type_code} FAILED [HTTP ${resp.status_code}] >> ${resp.text}
     END
@@ -608,6 +610,7 @@ Cancel Delivery Note
     ${payload}=    Create Dictionary    vat=${DN_ISSUER_TIN}    mark=${mark}
     ${resp}=    POST On Session    provider_issuer    /Invoice/cancelDeliveryNote    json=${payload}    expected_status=any
     Log Response    ${resp}    CancelDeliveryNote
+    api.Log Api Call Response    POST    /Invoice/cancelDeliveryNote    ${resp}    ${payload}
     IF    ${resp.status_code} >= 400
         Fail    CancelDeliveryNote FAILED [HTTP ${resp.status_code}] >> ${resp.text}
     END
@@ -621,6 +624,7 @@ Get Status
     ${resp}=    GET On Session    aade    /GetDeliveryNoteStatus    params=mark=${mark}&issuerVatNumber=${DN_ISSUER_TIN}
     ...         headers=${AADE_H_ISSUER}    expected_status=any
     Log Response    ${resp}    GetDeliveryNoteStatus
+    api.Log Api Call Response    GET    /GetDeliveryNoteStatus    ${resp}
     ${status}=    Extract Status    ${resp.text}
     Log    Current status (mark=${mark}): ${status}
     RETURN    ${status}
@@ -663,6 +667,7 @@ AADE Post
     [Documentation]    POST XML στο AADE session. Αν expect_failure=True, αναμένει HTTP>=400.
     ${resp}=    POST On Session    aade    ${path}    data=${xml}    headers=${headers}    expected_status=any
     Log Response    ${resp}    ${label}
+    api.Log Api Call Response    POST    ${path}    ${resp}
     IF    ${expect_failure}
         Should Be True    ${resp.status_code} >= 400
         ...    msg=${label}: αναμενόταν αποτυχία (η ενέργεια θα έπρεπε να μπλοκαριστεί) αλλά HTTP ${resp.status_code}

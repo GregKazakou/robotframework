@@ -44,6 +44,7 @@ Library          OperatingSystem
 Library          String
 Library          DateTime
 Library          ${CURDIR}/InvoiceHelpers.py
+Library          ${EXECDIR}/Automation/helpers.py    WITH NAME    api
 Variables        ${EXECDIR}/config/credentials.py
 
 Suite Setup      Build Variant Matrix
@@ -395,6 +396,7 @@ Post Invoice And Verify
 
     ${response}=    POST On Session    einvoice    ${endpoint}    json=${payload}
     ...             expected_status=any
+    api.Log Api Call Response    POST    ${endpoint}    ${response}    ${payload}
 
     Should Be Equal As Integers    ${response.status_code}    201
     ...    msg=Expected HTTP 201, got ${response.status_code}: ${response.text}

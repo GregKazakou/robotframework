@@ -245,6 +245,7 @@ Library           Collections
 Library           OperatingSystem
 Library           DateTime
 Library           String
+Library           ${EXECDIR}/Automation/helpers.py    WITH NAME    api
 Variables         ${EXECDIR}/config/credentials.py
 Suite Setup       Setup Suite
 Test Setup        Reset Pending Marks Pool
@@ -623,6 +624,7 @@ Submit FNB Document
     ${resp}=              POST On Session    fnb    /invoice/json    json=${payload}
     ...                   expected_status=any
     Log Response          ${resp}    ${label}
+    api.Log Api Call Response    POST    /invoice/json    ${resp}    ${payload}
     IF    ${resp.status_code} >= 400
         ${err_msg}=       Extract Server Error    ${resp}
         Fail              ${label} FAILED [HTTP ${resp.status_code} ${resp.reason}] >> ${err_msg}
