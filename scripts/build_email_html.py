@@ -179,7 +179,43 @@ def collect_leaf_suites(root: ET.Element):
     for suite in root.iter("suite"):
         tests = suite.findall("test")
         if tests:
-            yield suite.get("name") or "(unnamed)", tests
+            yield suite.get("name") or "(unnamed)", suite.get("source") or "", tests
+
+
+def suite_file(source: str, suite_name: str) -> str:
+    """Repo-relative .robot path for a suite (from its output.xml `source`)."""
+    if source:
+        src = source.replace("\\", "/")
+        i = src.lower().rfind("/automation/")
+        if i >= 0:
+            return src[i + 1:]           # e.g. Automation/DN Life Cycle.robot
+        return src.rsplit("/", 1)[-1]
+    return f"Automation/{suite_name}.robot"
+
+
+def failing_call(calls):
+    """The API call that most likely caused the failure: the last one with a
+    4xx/5xx status, else the last call. Returns None if there were no calls."""
+    if not calls:
+        return None
+    bad = [c for c in calls if str(c.get("status", ""))[:1] in ("4", "5")]
+    return (bad or calls)[-1]
+
+
+def extract_failing_step(test: ET.Element) -> str:
+    """Best-effort name of the deepest keyword that failed — i.e. where in the
+    test the error was raised (e.g. an assertion or a verification keyword)."""
+    deepest = ""
+    for kw in test.iter("kw"):
+        st = kw.find("status")
+        if st is not None and st.get("status") == "FAIL":
+            name = kw.get("name") or ""
+            # skip generic control wrappers; keep meaningful step names
+            if name and name not in (
+                    "Run Keyword And Continue On Failure", "Run Keywords",
+                    "BuiltIn.Run Keyword", "Fail", "BuiltIn.Fail"):
+                deepest = name
+    return deepest
 
 
 def test_status(t: ET.Element):
@@ -250,27 +286,28 @@ def suite_description(name: str) -> str:
 
 # ────────────────────────── Grouping failures ────────────────────────────
 def group_failures(failures):
-    """Group same-suite failures that share the same short message."""
+    """Group same-suite failures that share the same short message. Each item
+    is a dict {suite,file,name,raw,calls,step}; returns enriched group dicts."""
     out = []
     by_suite = {}
-    for suite, name, msg in failures:
-        by_suite.setdefault(suite, []).append((name, msg))
+    for f in failures:
+        by_suite.setdefault(f["suite"], []).append(f)
 
     for suite, items in by_suite.items():
         buckets = {}
-        for name, msg in items:
-            key = short_message(msg, limit=70)
-            buckets.setdefault(key, []).append((name, msg))
+        for f in items:
+            key = short_message(f["raw"], limit=70)
+            buckets.setdefault(key, []).append(f)
         for _key, entries in buckets.items():
-            names = [n for n, _ in entries]
-            full_msg = entries[0][1]
-            display_msg = short_message(full_msg, limit=180)
-            code = _error_code(full_msg)
-            # portal URL only makes sense for a single test (grouped tests
-            # each have their own document)
-            url = extract_portal_url(full_msg) if len(names) == 1 else ""
+            rep = entries[0]
+            names = [e["name"] for e in entries]
+            display_msg = short_message(rep["raw"], limit=200)
+            code = _error_code(rep["raw"])
+            url = extract_portal_url(rep["raw"]) if len(names) == 1 else ""
+            call = failing_call(rep.get("calls"))
             if len(names) == 1:
                 label = names[0]
+                run_name = names[0]
             else:
                 nums = []
                 for n in names:
@@ -278,11 +315,18 @@ def group_failures(failures):
                     if m:
                         nums.append(int(m.group(1)))
                 if nums and len(nums) == max(nums) - min(nums) + 1:
-                    label = f"TC {min(nums):02d}–{max(nums):02d}  ({len(names)} tests)"
+                    label = f"TC {min(nums):02d}–{max(nums):02d}"
                 else:
                     joined = ", ".join(names)
                     label = joined if len(joined) <= 70 else joined[:69] + "…"
-            out.append((suite, label, display_msg, len(names), code, url))
+                run_name = ""
+            out.append({
+                "suite": suite, "file": rep["file"], "label": label,
+                "count": len(names), "msg": display_msg, "code": code,
+                "url": url, "step": rep.get("step", ""), "call": call,
+                "run_name": run_name,
+            })
+    # failures first by suite name for stable order
     return out
 
 
@@ -333,48 +377,99 @@ def suite_row(name: str, passed: int, failed: int, skipped: int) -> str:
     )
 
 
-def failure_block(suite: str, test_name: str, message: str,
-                  count: int, code: str, url: str = "") -> str:
+def _row(label_html: str, value_html: str) -> str:
+    """A compact label:value line inside a failure block."""
+    return (
+        f'<div style="font-family:{SANS};font-size:11px;line-height:16px;'
+        f'margin-top:5px;">'
+        f'<span style="color:{C["faint"]};">{label_html}</span> {value_html}</div>'
+    )
+
+
+def failure_block(g: dict) -> str:
+    """Render one failure group: what the test is, where to find it, and where
+    the error comes from."""
+    count = g["count"]
     pill = ""
     if count > 1:
         pill = (
             f'&nbsp;<span style="background:{C["fail_soft"]};color:{C["fail_dark"]};'
             f'font-family:{MONO};font-size:11px;padding:1px 6px;border-radius:4px;">'
-            f'×{count}</span>'
+            f'×{count} tests</span>'
         )
-    hint = ERROR_HINTS.get(code, "")
+
+    # WHAT: the suite this test belongs to, and its one-line purpose
+    desc = suite_description(g["suite"])
+    what = (f'{esc(g["suite"])}' + (f' — {esc(desc)}' if desc else ''))
+
+    # WHERE: file + a ready-to-run command (single test only)
+    fname = esc(g["file"])
+    if g["run_name"]:
+        run_cmd = f'robot -t "{g["run_name"]}" "{g["file"]}"'
+        locate = (
+            f'<div style="font-family:{MONO};font-size:11px;line-height:16px;'
+            f'color:{C["accent"]};background:{C["accent_bg"]};border-radius:4px;'
+            f'padding:4px 8px;margin-top:5px;word-break:break-all;'
+            f'white-space:pre-wrap;">{esc(run_cmd)}</div>'
+        )
+    else:
+        locate = _row("📁", f'<span style="font-family:{MONO};color:{C["text"]};">{fname}</span>')
+
+    # WHERE THE ERROR COMES FROM: failing API call and/or failing step
+    src_parts = []
+    call = g.get("call")
+    if call and call.get("ep"):
+        st = str(call.get("status", "") or "?")
+        src_parts.append(
+            f'<span style="font-family:{MONO};color:{C["text"]};">'
+            f'{esc(call.get("method","POST"))} {esc(call["ep"])}</span> → '
+            f'<span style="font-family:{MONO};font-weight:700;color:{C["fail_text"]};">'
+            f'HTTP {esc(st)}</span>')
+    if g.get("step"):
+        src_parts.append(f'βήμα <span style="font-family:{MONO};color:{C["text"]};">'
+                         f'{esc(g["step"])}</span>')
+    source_line = _row("Πηγή:", " · ".join(src_parts)) if src_parts else ""
+
+    # myDATA code hint
     code_line = ""
-    if code:
-        code_txt = f"myDATA {code}" + (f" — {hint}" if hint else "")
+    if g["code"]:
+        hint = ERROR_HINTS.get(g["code"], "")
+        code_txt = f"myDATA {g['code']}" + (f" — {hint}" if hint else "")
         code_line = (
-            f'<div style="font-family:{SANS};font-size:11px;line-height:15px;'
-            f'color:{C["fail_dark"]};margin-top:6px;">'
-            f'<b>{esc(code_txt)}</b></div>'
+            f'<div style="font-family:{SANS};font-size:11px;line-height:16px;'
+            f'color:{C["fail_dark"]};margin-top:5px;"><b>{esc(code_txt)}</b></div>'
         )
-    # Clickable portal link — short label, so the long URL never overflows.
-    # href carries the full URL (escaped, NOT soft-wrapped so the link works).
+
+    # portal link
     url_line = ""
-    if url:
+    if g["url"]:
         url_line = (
             f'<div style="margin-top:6px;">'
-            f'<a href="{esc(url)}" style="font-family:{SANS};font-size:12px;'
+            f'<a href="{esc(g["url"])}" style="font-family:{SANS};font-size:12px;'
             f'font-weight:600;color:{C["accent"]};text-decoration:none;">'
             f'🔗 Άνοιγμα παραστατικού στο portal →</a></div>'
         )
+
     return (
         f'<table role="presentation" width="{CONTENT_W}" cellpadding="0" cellspacing="0"'
         f' border="0" style="width:{CONTENT_W}px;table-layout:fixed;border-collapse:collapse;'
-        f'margin:0 0 8px 0;"><tr>'
+        f'margin:0 0 10px 0;"><tr>'
         f'<td width="4" style="width:4px;background:{C["fail_dot"]};font-size:0;'
         f'line-height:0;">&nbsp;</td>'
         f'<td bgcolor="{C["fail_bg"]}" style="background:{C["fail_bg"]};padding:10px 12px;">'
+        # test name (full)
         f'<div style="font-family:{SANS};font-size:13px;line-height:18px;'
-        f'font-weight:600;color:{C["fail_dark"]};">'
-        f'{esc(test_name)}{pill}</div>'
+        f'font-weight:700;color:{C["fail_dark"]};">{esc(g["label"])}{pill}</div>'
+        # what it is
         f'<div style="font-family:{SANS};font-size:11px;line-height:15px;'
-        f'color:{C["muted"]};margin:1px 0 6px 0;">{esc(suite)}</div>'
+        f'color:{C["muted"]};margin:2px 0 0 0;">{what}</div>'
+        # where to run it
+        f'{locate}'
+        # where the error comes from
+        f'{source_line}'
+        # the error message
         f'<div style="font-family:{MONO};font-size:12px;line-height:17px;'
-        f'color:{C["fail_text"]};word-break:break-all;">{safe(message)}</div>'
+        f'color:{C["fail_text"]};word-break:break-all;margin-top:6px;">{safe(g["msg"])}</div>'
         f'{code_line}'
         f'{url_line}'
         f"</td></tr></table>"
@@ -463,20 +558,26 @@ def render(output_xml_path: str) -> str:
     calls_by_suite = []
     total_ms = 0
 
-    for suite_name, tests in suites:
+    for suite_name, source, tests in suites:
         p = f = s = 0
         suite_calls = []
+        sfile = suite_file(source, suite_name)
         for t in tests:
             status, elapsed, raw = test_status(t)
             total_ms += int(elapsed * 1000)
+            calls = extract_api_calls(t)
             if status == "PASS":
                 p += 1
             elif status == "FAIL":
                 f += 1
-                failures.append((suite_name, t.get("name") or "", raw))
+                failures.append({
+                    "suite": suite_name, "file": sfile,
+                    "name": t.get("name") or "", "raw": raw,
+                    "calls": calls, "step": extract_failing_step(t),
+                })
             else:
                 s += 1
-            suite_calls.append((t.get("name") or "", status, extract_api_calls(t)))
+            suite_calls.append((t.get("name") or "", status, calls))
         suite_summary.append((suite_name, p, f, s))
         calls_by_suite.append((suite_name, suite_calls))
         total_pass += p
@@ -528,12 +629,9 @@ def render(output_xml_path: str) -> str:
     grouped = group_failures(failures)
     failures_section = ""
     if grouped:
-        blocks = "".join(
-            failure_block(su, nm, msg, cnt, code, url)
-            for su, nm, msg, cnt, code, url in grouped
-        )
+        blocks = "".join(failure_block(g) for g in grouped)
         failures_section = (
-            section_title(f"Αστοχίες ({total_fail})")
+            section_title(f"Αστοχίες ({total_fail}) — τι, πού, από πού")
             + f'<tr><td style="padding:4px {PAD_X}px 4px {PAD_X}px;">{blocks}</td></tr>'
         )
 
