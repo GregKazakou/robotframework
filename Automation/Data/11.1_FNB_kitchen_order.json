@@ -57,11 +57,11 @@
             "Quantity": 100,
             "UnitPrice": 8.85,
             "allowancesTotal": 0.0,
-            "NetTotal": 0,
+            "NetTotal": 88.50,
             "VatCategory": "13",
             "VatCategoryCode": 2,
-            "VATTotal": 0,
-            "Total": 0,
+            "VATTotal": 11.50,
+            "Total": 100,
             "IsInformative": false,
             "IsHidden": false,
             "RecordTypeCode": 0,
@@ -74,15 +74,15 @@
     ],
     "Summaries": {
         "totalAllowances": 0.0,
-        "TotalNetAmount": 0,
-        "TotalVATAmount": 0,
-        "TotalGrossValue": 0
+        "TotalNetAmount": 88.5,
+        "TotalVATAmount": 11.50,
+        "TotalGrossValue": 100
     },
     "VatAnalysis": [
         {
             "Percentage": 13.0,
-            "VatAmount": 0,
-            "UnderlyingValue": 0.0
+            "VatAmount": 11.50,
+            "UnderlyingValue": 88.5
         }
     ],
     "IsDelayedCode": 0
