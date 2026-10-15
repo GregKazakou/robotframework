@@ -1,0 +1,89 @@
+{
+    "Currency": "EUR",
+    "CurrencyCode": "EUR",
+    "InvoiceType": "Δελτίο Παραγγελίας Κουζίνας / Kitchen Order",
+    "InvoiceTypeCode": "11.1",
+    "SpecialInvoiceCategory": 0,
+    "DocumentTypeCode": "FNB",
+    "Series": "FNB000",
+    "number": "0",
+    "dateIssued": "2026-01-01",
+    "RelativeDocuments": [],
+    "correlatedInvoices": [],
+    "OrderCode": "Order 1",
+    "tableId": "2/20",
+    "issuer": {
+        "registeredName": "Ταβέρνα Γ.",
+        "vat": "EL154697391",
+        "taxOffice": "ΔΟΥ ΣΤ ΑΘΗΝΩΝ",
+        "GeneralCommercialRegistryNumber": "2154697391",
+        "activities": [
+            "Ταβέρνα"
+        ],
+        "address": {
+            "countryCode": "GR",
+            "city": "Αθήνα",
+            "street": "Αθήνας",
+            "number": "32",
+            "postal": "15342"
+        },
+        "phones": [
+            "2109929299"
+        ],
+        "branchCode": 0,
+        "branch": "Κεντρικό κατάστημα"
+    },
+    "AdditionalDetails": {
+        "AccountingDepartmentEmails": [
+            "test@example.com"
+        ],
+        "TransmissionMethod": "A",
+        "AvoidEmailGrouping": false
+    },
+    "DistributionDetails": {
+        "InternalDocumentId": "FNB1000",
+        "salesman": "Σερβιτόρος Α1",
+        "content": "Άτομα 3"
+    },
+    "Details": [
+        {
+            "LineNo": 1,
+            "code": "251320104",
+            "Descriptions": [
+                "COCA COLA 330ml"
+            ],
+            "MeasurementUnitCode": 1,
+            "MeasurementUnit": "ΤΜΧ",
+            "Quantity": 100,
+            "UnitPrice": 8.85,
+            "allowancesTotal": 0.0,
+            "NetTotal": 0,
+            "VatCategory": "13",
+            "VatCategoryCode": 2,
+            "VATTotal": 0,
+            "Total": 0,
+            "IsInformative": false,
+            "IsHidden": false,
+            "RecordTypeCode": 0,
+            "noVat": true,
+            "IncomeClassification": {
+                "ClassificationTypeCode": "E3_561_003",
+                "ClassificationCategoryCode": "category1_1"
+            }
+        }
+    ],
+    "Summaries": {
+        "totalAllowances": 0.0,
+        "TotalNetAmount": 0,
+        "TotalVATAmount": 0,
+        "TotalGrossValue": 0
+    },
+    "VatAnalysis": [
+        {
+            "Percentage": 13.0,
+            "VatAmount": 0,
+            "UnderlyingValue": 0.0
+        }
+    ],
+    "IsDelayedCode": 0
+}

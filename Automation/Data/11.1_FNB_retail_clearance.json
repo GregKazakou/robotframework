@@ -1,0 +1,114 @@
+{
+    "Currency": "Euro",
+    "CurrencyCode": "EUR",
+    "InvoiceType": "ΑΠΟΔΕΙΞΗ ΛΙΑΝΙΚΗΣ ΠΩΛΗΣΗΣ",
+    "InvoiceTypeCode": "11.1",
+    "SpecialInvoiceCategory": 0,
+    "DocumentType": "ΑΠΟΔΕΙΞΗ",
+    "DocumentTypeCode": "Invoice",
+    "IsDeliveryNote": false,
+    "Series": "ΑΛΠ100",
+    "number": "0",
+    "dateIssued": "2026-01-01",
+    "RelativeDocuments": [],
+    "multipleConnectedMarks": [],
+    "issuer": {
+        "registeredName": "Ταβέρνα Γ.",
+        "vat": "EL154697391",
+        "taxOffice": "ΔΟΥ ΣΤ ΑΘΗΝΩΝ",
+        "GeneralCommercialRegistryNumber": "2154697391",
+        "activities": [
+            "Ταβέρνα"
+        ],
+        "address": {
+            "countryCode": "GR",
+            "city": "Αθήνα",
+            "street": "Αθήνας",
+            "number": "32",
+            "postal": "15342"
+        },
+        "phones": [
+            "2109929299"
+        ],
+        "branchCode": 0,
+        "branch": "Κεντρικό κατάστημα"
+    },
+    "CounterParty": {
+        "RegisteredName": "ΠΕΛΑΤΗΣ ΛΙΑΝΙΚΗΣ",
+        "Vat": "",
+        "Address": {
+            "CountryCode": "GR",
+            "Municipality": "ΑΘΗΝΑ",
+            "City": "ΑΘΗΝΑ",
+            "Street": "Κηφισού",
+            "number": "32",
+            "Postal": "11000"
+        }
+    },
+    "AllowancesCharges": [],
+    "DistributionDetails": {
+        "InternalDocumentId": "ALP1000"
+    },
+    "PaymentDetails": {
+        "PaymentMethods": [
+            {
+                "PaymentMethodType": "Credit Card",
+                "PaymentMethodTypeCode": 5,
+                "Amount": 124
+            }
+        ],
+        "fnbClearance": [
+            "FNB100303"
+        ]
+    },
+    "AdditionalDetails": {
+        "AccountingDepartmentEmails": [
+            "test@example.com"
+        ],
+        "TransmissionMethod": "A",
+        "AvoidEmailGrouping": false,
+        "DocumentTemplate": ""
+    },
+    "Details": [
+        {
+            "LineNo": 1,
+            "code": "251320104",
+            "Descriptions": [
+                "COCA COLA 330ml"
+            ],
+            "MeasurementUnitCode": 1,
+            "MeasurementUnit": "ΤΜΧ",
+            "Quantity": 100,
+            "UnitPrice": 8.85,
+            "allowancesTotal": 0.0,
+            "NetTotal": 88.50,
+            "VatCategory": "13",
+            "VatCategoryCode": 2,
+            "VATTotal": 11.50,
+            "Total": 100,
+            "IsInformative": false,
+            "IsHidden": false,
+            "RecordTypeCode": 0,
+            "noVat": true,
+            "IncomeClassification": {
+                "ClassificationTypeCode": "E3_561_003",
+                "ClassificationCategoryCode": "category1_1"
+            }
+        }
+    ],
+    "Summaries": {
+        "totalAllowances": 0.0,
+        "TotalNetAmount": 88.5,
+        "TotalVATAmount": 11.50,
+        "TotalGrossValue": 100
+    },
+    "VatAnalysis": [
+        {
+            "Percentage": 13.0,
+            "VatAmount": 11.50,
+            "UnderlyingValue": 88.5
+        }
+    ],
+    "MiscellaneousData": {},
+    "IsDelayedCode": 0
+}

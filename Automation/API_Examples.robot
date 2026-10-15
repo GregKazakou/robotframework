@@ -170,6 +170,30 @@ DN CANCEL - issue a 9.3 delivery note then cancel it
     ${cancel}=    Create Dictionary    vat=${ISSUER_TIN}    mark=${res.mark}
     Send Example    cancel delivery note    ${EP_CANCEL_DN}    ${cancel}    200
 
+FNB CLEARANCE - kitchen order (FNB) then retail invoice (Invoice) with fnbClearance
+    [Documentation]    1) Έκδοση δελτίου κουζίνας (DocumentTypeCode "FNB") με γνωστό
+    ...                InternalDocumentId. 2) Έκδοση απόδειξης λιανικής (DocumentTypeCode
+    ...                "Invoice") που το συσχετίζει μέσω PaymentDetails.fnbClearance με το
+    ...                InternalDocumentId του δελτίου κουζίνας.
+    [Template]    NONE
+    [Tags]        invoice    fnb    clearance    correlation
+    # 1) Δελτίο κουζίνας — γνωστό FNB InternalDocumentId για να το δείξει το fnbClearance
+    ${suffix}=    Evaluate    __import__('time').strftime('%H%M%S') + str(__import__('random').randint(100, 999))
+    ${idoc}=      Set Variable    FNB100${suffix}
+    ${ko}=        api.Load Template    11.1_FNB_kitchen_order
+    ${ko}=        api.Apply Unique Fields    ${ko}    FNBKO
+    ${ko}=        api.Set Party Vats    ${ko}    ${ISSUER_VAT}
+    ${ko}=        api.Set Internal Document Id    ${ko}    ${idoc}
+    ${ko_res}=    Send Example    FNB kitchen order (DocumentTypeCode FNB)    ${EP_INVOICE}    ${ko}    201    require=mark
+    Log    Kitchen order InternalDocumentId = ${idoc} -> mark ${ko_res.mark}    INFO
+
+    # 2) Απόδειξη λιανικής που κλείνει το δελτίο κουζίνας μέσω fnbClearance
+    ${inv}=    api.Load Template    11.1_FNB_retail_clearance
+    ${inv}=    api.Apply Unique Fields    ${inv}    FNBINV
+    ${inv}=    api.Set Party Vats    ${inv}    ${ISSUER_VAT}
+    ${inv}=    api.Set Fnb Clearance    ${inv}    ${idoc}
+    Send Example    retail invoice with fnbClearance=[${idoc}]    ${EP_INVOICE}    ${inv}    201    require=mark
+
 POS VALIDATE - signpos then validate payment
     [Documentation]    signpos (8.4) → /PosTransactions/validate με το
     ...                signature/input που επιστράφηκε.

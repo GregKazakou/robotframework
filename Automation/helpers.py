@@ -502,6 +502,25 @@ def set_internal_document_id(payload: Dict[str, Any], value: str) -> Dict[str, A
     return new
 
 
+def set_fnb_clearance(payload: Dict[str, Any],
+                      clearance_ids: Any) -> Dict[str, Any]:
+    """Return a copy with PaymentDetails.fnbClearance set to the given list of
+    IDs. Used to correlate a retail invoice (DocumentTypeCode 'Invoice') to a
+    kitchen order (DocumentTypeCode 'FNB') by the order's InternalDocumentId.
+    Creates PaymentDetails if missing."""
+    new = copy.deepcopy(payload)
+    if isinstance(clearance_ids, str):
+        clearance_ids = [clearance_ids]
+    else:
+        clearance_ids = list(clearance_ids)
+    pd = new.get("PaymentDetails")
+    if not isinstance(pd, dict):
+        pd = {}
+        new["PaymentDetails"] = pd
+    pd["fnbClearance"] = clearance_ids
+    return new
+
+
 def set_additional_details(payload: Dict[str, Any],
                            transmission_method: str = "",
                            tag: str = "") -> Dict[str, Any]:
