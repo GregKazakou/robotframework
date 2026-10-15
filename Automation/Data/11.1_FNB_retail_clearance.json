@@ -67,7 +67,11 @@
         ],
         "TransmissionMethod": "A",
         "AvoidEmailGrouping": false,
-        "DocumentTemplate": ""
+        "DocumentTemplate": "",
+        "DocumentTags": [
+            "LEGACY",
+            "FNB"
+        ]
     },
     "Details": [
         {
