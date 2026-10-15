@@ -35,6 +35,7 @@ SCHEMA_CAVEATS = {
 ENDPOINT_PATHS = {
     "b2b_json": "invoice/json",
     "b2g_json": "invoice/json",
+    "retail_11_1": "invoice/json",
     "jsonxml": "invoice/json",
     "deliverynote": "invoice/json",
     "grcore": "invoice/grcore",
@@ -44,6 +45,7 @@ ENDPOINT_PATHS = {
 TEMPLATE_FILES = {
     "b2b_json": "b2b_json.json",
     "b2g_json": "b2g_json.json",
+    "retail_11_1": "retail_11_1.json",
     "jsonxml": "jsonxml.json",
     "deliverynote": "deliverynote.json",
     "grcore": "grcore.txt",

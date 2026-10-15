@@ -149,6 +149,30 @@ TC5 B2G - Method A - SendAsPdf - Delay 0
     b2g_json    A    ${TRUE}    ${FALSE}    ${TRUE}    ${TRUE}    0
 
 # =========================================================================
+# 3.2b  Retail 11.1 (ΑΛΠ λιανικής) JSON - ίδιο camelCase schema με B2B
+#       Παραστατικό λιανικής (invoiceTypeCode 11.1) με ειδοποίηση μέσω email.
+# =========================================================================
+TC1 Retail 11.1 - Method A - Email - Delay 5
+    [Tags]    retail_11_1    methodA    delay5    email
+    [Template]    Submit Notification Scenario
+    retail_11_1    A    ${TRUE}    ${FALSE}    ${FALSE}    ${TRUE}    5
+
+TC2 Retail 11.1 - Method E - Email - Delay 5
+    [Tags]    retail_11_1    methodE    delay5    email
+    [Template]    Submit Notification Scenario
+    retail_11_1    E    ${TRUE}    ${FALSE}    ${FALSE}    ${TRUE}    5
+
+TC3 Retail 11.1 - Method C - Email + SMS - Delay 5
+    [Tags]    retail_11_1    methodC    delay5    email    sms
+    [Template]    Submit Notification Scenario
+    retail_11_1    C    ${TRUE}    ${TRUE}    ${FALSE}    ${TRUE}    5
+
+TC4 Retail 11.1 - Method A - Email - Delay 0
+    [Tags]    retail_11_1    methodA    delay0    email
+    [Template]    Submit Notification Scenario
+    retail_11_1    A    ${TRUE}    ${FALSE}    ${FALSE}    ${TRUE}    0
+
+# =========================================================================
 # 3.3  JSON+XML - PascalCase, μειωμένο schema
 #      CustomerCellNumbers / NotificationDelay ΔΕΝ υπάρχουν στο αρχικό template.
 # =========================================================================

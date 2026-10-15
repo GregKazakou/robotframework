@@ -1,0 +1,125 @@
+{
+    "IsDelayedCode": 0,
+    "iaprSignPolicy": 2,
+    "CurrencyCode": "EUR",
+    "InvoiceType": "Retail Sales Receipt",
+    "InvoiceTypeCode": "11.1",
+    "SpecialInvoiceCategory": 0,
+    "DocumentTypeCode": "INVOICE",
+    "IsDeliveryNote": false,
+    "Series": "ALP-NOTIF",
+    "Number": "110011{{invoiceNumber}}",
+    "DateIssued": "{{currentDateTime}}",
+    "RelativeDocuments": [],
+    "multipleConnectedMarks": [],
+    "OrderCode": "2",
+    "Issuer": {
+        "RegisteredName": "issuer's name",
+        "Vat": "{{issuerTIN}}",
+        "GeneralCommercialRegistryNumber": "00000000000",
+        "TaxOffice": "issuer's Tax Office",
+        "contactPerson": "issuer's Contact Person",
+        "Phones": ["2000000000"],
+        "Faxes": ["2000000000"],
+        "Address": {
+            "CountryCode": "GR",
+            "City": "issuer's city",
+            "Street": "issuer's street",
+            "Number": "issuer's number",
+            "Postal": "issuer's postal code"
+        },
+        "BranchCode": 0,
+        "Branch": "Main Branch"
+    },
+    "CounterParty": {
+        "RegisteredName": "RETAIL CUSTOMER",
+        "code": "0000065",
+        "Vat": "",
+        "Address": {
+            "CountryCode": null,
+            "Municipality": null,
+            "City": null,
+            "Street": null,
+            "number": null,
+            "Postal": null
+        },
+        "Branch": 0
+    },
+    "AllowancesCharges": [],
+    "DistributionDetails": {
+        "InternalDocumentId": "ERP_Retail_Notif_{{invoiceNumber}}"
+    },
+    "PaymentDetails": {
+        "exchangeCurrencyRate": 1.00000,
+        "PaymentMethods": [
+            {
+                "PaymentMethodType": "Cash",
+                "PaymentMethodTypeCode": 3,
+                "Amount": 124,
+                "remarks": "Cash"
+            }
+        ]
+    },
+    "AdditionalDetails": {
+        "TransmissionMethod": "{{TransmissionMethod}}",
+        "accountingDepartmentEmails": [
+            "{{validEmailAddress}}", "{{invalidEmailAddress}}"
+        ],
+        "documentTemplate": null,
+        "notificationDelay": {{DelayMinutes}},
+        "customerCellNumbers": [
+            "{{validCellphoneNumber}}", "{{invalidCellphoneNumber}}"
+        ],
+        "sendAsPdf": {{InvoiceAttach}},
+        "pdfNotificationEmails": [
+            "{{validEmailAddress}}", "{{invalidEmailAddress}}"
+        ],
+        "DocumentTags": [
+            "transactionType=POS",
+            "invoice=11.1",
+            "{{TransmissionMethod}}",
+            "{{DelayMinutes}}"
+        ]
+    },
+    "Details": [
+        {
+            "LineNo": 1,
+            "code": "251320104",
+            "Descriptions": ["Product's specifications"],
+            "MeasurementUnitCode": 1,
+            "MeasurementUnit": "Pieces",
+            "Quantity": 100,
+            "UnitPrice": 1.09,
+            "allowancesTotal": 0.0,
+            "NetTotal": 109.73,
+            "VatCategory": "13",
+            "VatCategoryCode": 2,
+            "VATTotal": 14.27,
+            "Total": 124,
+            "IsInformative": false,
+            "IsHidden": false,
+            "RecordTypeCode": 0,
+            "noVat": true,
+            "IncomeClassification": {
+                "ClassificationTypeCode": "",
+                "ClassificationCategoryCode": "category1_95"
+            }
+        }
+    ],
+    "Summaries": {
+        "totalAllowances": 0.0,
+        "TotalNetAmount": 109.73,
+        "TotalVATAmount": 14.27,
+        "TotalGrossValue": 124
+    },
+    "VatAnalysis": [
+        {
+            "Percentage": 13.0,
+            "VatAmount": 5.8,
+            "UnderlyingValue": 109.73
+        }
+    ],
+    "MiscellaneousData": {
+        "Comments1": "Retail 11.1 notification test"
+    }
+}
