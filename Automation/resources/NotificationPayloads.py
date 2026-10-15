@@ -77,13 +77,20 @@ class NotificationPayloads:
         valid_cell,
         invalid_cell,
         invoice_number_seed=1,
+        nonexistent_email="nonexistent.autotest@impact.gr",
     ):
-        """Ορίζει τις τιμές που θα μπουν στη θέση των {{placeholders}}."""
+        """Ορίζει τις τιμές που θα μπουν στη θέση των {{placeholders}}.
+
+        nonexistent_email: διεύθυνση με ΣΩΣΤΟ format αλλά ΑΝΥΠΑΡΚΤΟ γραμματοκιβώτιο
+        στο πραγματικό domain (π.χ. nonexistent.autotest@impact.gr). Χρησιμεύει για
+        σενάριο όπου η υποβολή ΠΡΕΠΕΙ να γίνει δεκτή (έγκυρη μορφή) αλλά η ειδοποίηση
+        δεν μπορεί να παραδοθεί (το email δεν υπάρχει)."""
         self._cfg = {
             "issuerTIN": str(issuer_tin),
             "counterPartyTIN": str(counterparty_tin),
             "validEmailAddress": str(valid_email),
             "invalidEmailAddress": str(invalid_email),
+            "nonexistentEmailAddress": str(nonexistent_email),
             "validCellphoneNumber": str(valid_cell),
             "invalidCellphoneNumber": str(invalid_cell),
         }
@@ -134,6 +141,10 @@ class NotificationPayloads:
         if mode == "invalid":
             # negative σενάριο: περιλαμβάνει άκυρη διεύθυνση -> αναμένεται HTTP 400
             return [self._cfg["validEmailAddress"], self._cfg["invalidEmailAddress"]]
+        if mode == "nonexistent":
+            # σωστό format αλλά ανύπαρκτο γραμματοκιβώτιο -> υποβολή ΔΕΚΤΗ (201),
+            # η ειδοποίηση όμως δεν παραδίδεται (bounce/καμία παράδοση)
+            return [self._cfg["nonexistentEmailAddress"]]
         # θετικό σενάριο: ΜΟΝΟ έγκυρη διεύθυνση -> το παραστατικό γίνεται δεκτό & παραδίδεται
         return [self._cfg["validEmailAddress"]]
 

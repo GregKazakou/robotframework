@@ -172,6 +172,13 @@ TC4 Retail 11.1 - Method A - Email - Delay 0
     [Template]    Submit Notification Scenario
     retail_11_1    A    ${TRUE}    ${FALSE}    ${FALSE}    ${TRUE}    0
 
+TC5 Retail 11.1 - Method A - Nonexistent Email (valid format) - Delay 0
+    [Documentation]    Email σωστού format αλλά ανύπαρκτο (@impact.gr): η υποβολή γίνεται
+    ...    δεκτή, η ειδοποίηση ΔΕΝ παραδίδεται (χειροκίνητος έλεγχος bounce).
+    [Tags]    retail_11_1    methodA    delay0    email    nonexistent    deliverability
+    [Template]    Submit Nonexistent Email Scenario
+    retail_11_1    A    ${TRUE}    ${FALSE}    ${FALSE}    ${TRUE}    0
+
 # =========================================================================
 # 3.3  JSON+XML - PascalCase, μειωμένο schema
 #      CustomerCellNumbers / NotificationDelay ΔΕΝ υπάρχουν στο αρχικό template.
@@ -417,6 +424,28 @@ Submit Invalid Recipient Scenario
     Should Contain    ${resp.text}    Invalid
     ...    msg=[${endpoint}] Η 400 απάντηση δεν αναφέρει 'Invalid': ${resp.text}
     Log    NEGATIVE OK [${endpoint}] απορρίφθηκε σωστά: ${resp.text}    level=INFO
+
+Submit Nonexistent Email Scenario
+    [Documentation]    Στέλνει παραστατικό με email ΣΩΣΤΟΥ format αλλά ΑΝΥΠΑΡΚΤΟ
+    ...    γραμματοκιβώτιο (π.χ. nonexistent.autotest@impact.gr). Επειδή η μορφή είναι
+    ...    έγκυρη, η ΥΠΟΒΟΛΗ πρέπει να γίνει ΔΕΚΤΗ (HTTP < 400 με mark/uid). Η ειδοποίηση
+    ...    όμως δεν μπορεί να παραδοθεί - αυτό επαληθεύεται ΧΕΙΡΟΚΙΝΗΤΑ (bounce/μη παράδοση).
+    [Arguments]    ${endpoint}    ${method}    ${acct_emails}    ${cells}
+    ...    ${send_pdf}    ${pdf_emails}    ${delay}
+    ${body}=    Build Notification Payload
+    ...    endpoint=${endpoint}
+    ...    method=${method}
+    ...    accounting_emails=${acct_emails}
+    ...    customer_cells=${cells}
+    ...    send_as_pdf=${send_pdf}
+    ...    pdf_emails=${pdf_emails}
+    ...    notification_delay=${delay}
+    ...    recipient_mode=nonexistent
+    Log    ΠΡΟΣΟΧΗ [${endpoint}]: email σωστού format αλλά ΑΝΥΠΑΡΚΤΟ - η υποβολή πρέπει να γίνει δεκτή, αλλά η ειδοποίηση ΔΕΝ πρέπει να παραδοθεί (έλεγξε bounce χειροκίνητα).    level=INFO
+    ${path}=    Get Endpoint Path    ${endpoint}
+    ${resp}=    POST On Session    ${SESSION}    ${path}    json=${body}    expected_status=any
+    api.Log Api Call Response    POST    ${path}    ${resp}    ${body}
+    Verify Submission Accepted    ${resp}    ${endpoint}
 
 Submit Grcore Scenario
     [Documentation]    Στέλνει GRCORE flat αρχείο. Μόνο το TransmissionMethod μεταβάλλεται.
