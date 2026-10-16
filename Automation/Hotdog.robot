@@ -149,6 +149,38 @@ Wait For Page Ready
     # Basic “page loaded” check
     Wait Until Page Contains Element    xpath=//body    10s
 
+On ES1 Login Page
+    [Documentation]    True αν βρισκόμαστε στη σελίδα σύνδεσης του ES1 Identity
+    ...                (session expired -> OIDC redirect).
+    ${url}=    Get Location
+    ${res}=    Evaluate    ('s1identity' in r'''${url}''') or ('/auth/login' in r'''${url}''')
+    RETURN    ${res}
+
+Ensure Logged In
+    [Documentation]    Αυτο-θεραπεία session: το hotdoc SPA κατά διαστήματα χάνει το
+    ...                OIDC token σε full-page reload (silent-refresh race σε headless)
+    ...                και κάνει redirect στο ES1 Identity. Αν το ανιχνεύσουμε, ξανακάνουμε
+    ...                login με τα ίδια credentials του Suite Setup.
+    ${on_login}=    On ES1 Login Page
+    IF    ${on_login}
+        Log    Session lost — re-authenticating via ES1 Identity.    level=WARN
+        Test Login    ${userEmail1}    ${pwd1}
+        Wait Until Keyword Succeeds    8x    3s    Location Should Contain    hotdoc.impact.gr
+        Wait For Page Ready
+    END
+
+Go To Authed
+    [Documentation]    Σαν «Go To», αλλά αν η μετάβαση μας πετάξει στο login (session
+    ...                expired), ξανασυνδέεται και επαναλαμβάνει τη μετάβαση.
+    [Arguments]    ${url}
+    Go To    ${url}
+    ${on_login}=    On ES1 Login Page
+    IF    ${on_login}
+        Ensure Logged In
+        Go To    ${url}
+    END
+    Wait For Page Ready
+
 Expand Menu By Text
     [Arguments]    ${menu_name}
     # Τρέχον UI: το μενού είναι collapsible-trigger (όχι //button//span).
@@ -227,7 +259,7 @@ Select Company
     ...                ομαδοποιούνται ανά «εγκατάσταση» (ίσως χρειάζεται expand) και η
     ...                είσοδος γίνεται με κουμπί «Είσοδος στην εταιρεία …».
     [Arguments]    ${companyTIN1}
-    Go To    ${CO_SELECT_URL}
+    Go To Authed    ${CO_SELECT_URL}
     Wait For Page Ready
     # Τρέχον UI (Οκτ 2026): 2 επίπεδα. ΑΡΙΣΤΕΡΑ λίστα «Εγκαταστάσεων»
     # (<button class="…min-h-12…"> με κείμενο «<όνομα> <πλήθος>»), ΔΕΞΙΑ οι
@@ -248,7 +280,13 @@ Select Company
 # ----------- USER CONTROL -----------
 # ======================================
 Navigate To User Management
-
+    # Αυτο-θεραπεία: το TC βασίζεται στο company context προηγούμενου test. Αν η session
+    # έπεσε -> ξανασύνδεση· αν δεν είμαστε σε εταιρεία -> επιλογή εταιρείας· μετά μενού.
+    Ensure Logged In
+    ${on_select}=    Run Keyword And Return Status    Location Should Contain    /company/select
+    IF    ${on_select}
+        Select Company    ${companyTIN1}
+    END
     Expand Menu By Text    Διαχείριση
     Click Menu Item By Name    Διαχείριση Χρηστών
     Wait Until Location Is    https://hotdoc.impact.gr/account/manage
@@ -294,7 +332,7 @@ Change Company
     [Documentation]    Αλλάζει την επιλεγμένη εταιρεία μέσω της σελίδας «Επιλογή Εταιρείας»
     ...                (τρέχον UI). Ψάχνει με το όνομα και μπαίνει με «Είσοδος στην εταιρεία …».
     [Arguments]    ${company_name}=${newCompanyName}
-    Go To    ${CO_SELECT_URL}
+    Go To Authed    ${CO_SELECT_URL}
     Wait For Page Ready
     # Τρέχον UI (Οκτ 2026): αναζήτηση -> φιλτράρισμα εγκαταστάσεων αριστερά,
     # κλικ στην εγκατάσταση, μετά «Είσοδος» στη συγκεκριμένη εταιρεία δεξιά.
@@ -350,7 +388,7 @@ Enter Company
     ...                ${installation} = όνομα εγκατάστασης (π.χ. "Greg K")
     ...                ${company} = μέρος του ονόματος εταιρείας στο κουμπί εισόδου.
     [Arguments]    ${installation}    ${company}
-    Go To    ${CO_SELECT_URL}
+    Go To Authed    ${CO_SELECT_URL}
     Wait For Page Ready
     # Τρέχον UI (Οκτ 2026): ΑΡΙΣΤΕΡΑ επιλέγουμε την εγκατάσταση με το όνομα
     # (button class ~min-h-12, κείμενο «<όνομα> <πλήθος εταιρειών>»), ΔΕΞΙΑ
@@ -366,7 +404,7 @@ Enter Company
     Wait Until Keyword Succeeds    4x    3s    Land On Company Home
 
 Land On Company Home
-    Go To    ${urlHotdog}
+    Go To Authed    ${urlHotdog}
     Wait Until Element Is Visible    ${NAV_DOCUMENTS}    15s
     Wait For Page Ready
 
@@ -374,7 +412,7 @@ Land On Company Home
 # --- DocPilot: DASHBOARD ---
 # ======================================
 Verify Dashboard Widgets
-    Go To    ${urlHotdog}
+    Go To Authed    ${urlHotdog}
     Wait For Page Ready
     Wait Until Page Contains    Εισερχόμενα παραστατικά    15s
     Page Should Contain    Εκδότες
@@ -384,7 +422,7 @@ Verify Dashboard Widgets
 # --- DocPilot: DOCUMENTS / FILTERS ---
 # ======================================
 Open Documents Page
-    Go To    ${DOCS_URL}
+    Go To Authed    ${DOCS_URL}
     Wait For Page Ready
     # Το κουμπί «Αναζήτηση» είναι disabled μέχρι να μπουν ημ/νίες — περιμένουμε
     # το πεδίο ημερομηνίας (ορατό) αντί για το κουμπί.
@@ -401,7 +439,7 @@ Search Documents With Date Range
 
 Open First Delivery Note
     [Documentation]    Φιλτράρει Δελτία Διακίνησης και ανοίγει το 1ο σε Προβολή.
-    Go To    ${DN_FILTER_URL}
+    Go To Authed    ${DN_FILTER_URL}
     Wait For Page Ready
     # Η λίστα φορτώνει async — περιμένουμε να εμφανιστεί το «Προβολή» πριν το click.
     Safe Wait Element    ${VIEW_LINK_FIRST}    25s
