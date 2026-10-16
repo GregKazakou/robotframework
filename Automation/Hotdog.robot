@@ -177,7 +177,11 @@ Open Headless Browser
     ELSE
         Open Browser    ${urlHotdog}    ${Browser1}
     END
-    Maximize Browser Window
+    # Επιβάλλουμε ΡΗΤΑ μεγάλο viewport. Το «Maximize Browser Window» σε headless
+    # είναι αναξιόπιστο (καταλήγει ~800x600) και ενεργοποιεί το responsive layout,
+    # που ΚΡΥΒΕΙ το sidebar «Διαχείριση» και τα φίλτρα παραστατικών -> fail σε
+    # TC 03/04/06/07/08/09/10. Το Set Window Size δουλεύει και σε headless (CDP).
+    Set Window Size    1920    1080
     Go To    ${urlHotdog}auth/login
     Wait Until Page Contains Element    ${USERNAME_FIELD}    15s
 
