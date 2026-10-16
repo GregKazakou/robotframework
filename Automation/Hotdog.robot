@@ -29,6 +29,60 @@ ${newCompanyName}      ${HOTDOG_COMPANY_NAME}
 ${expectedAadeUser}    ${HOTDOG_EXPECTED_AADE_USER}
 ${BASE_URL}             https://hotdoc.impact.gr
 
+# ======================================
+# --- DocPilot feature selectors & data ---
+# (data-slot attributes + Lucide icon classes — επιβεβαιωμένα από live UI)
+# ======================================
+# Demo company VATs — override στο config/credentials.py αν χρειαστεί
+${CO_LMC_VAT}          118058830
+${CO_VDM_VAT}          127913129
+${CO_PAPAKI_VAT}       135952929
+${CO_GREGK_VAT}        154697391
+${CO_SIMPLE_VAT}       999840150
+
+# Sidebar navigation
+${NAV_HOME}            xpath=//button[@data-slot='sidebar-menu-button' and normalize-space(.)='Αρχική']
+${NAV_DOCUMENTS}       xpath=//button[@data-slot='sidebar-menu-button' and normalize-space(.)='Παραστατικά']
+${MENU_MANAGEMENT}     xpath=//button[@data-slot='collapsible-trigger' and normalize-space(.)='Διαχείριση']
+${MENU_HISTORY}        xpath=//button[@data-slot='collapsible-trigger' and normalize-space(.)='Ιστορικό']
+
+# Documents list
+${DOCS_URL}            ${BASE_URL}/invoices/incoming
+${DN_FILTER_URL}       ${BASE_URL}/invoices/incoming?From=2024-01-01&IsDeliveryNote=true
+${SEARCH_BUTTON}       xpath=//button[@data-slot='button' and normalize-space(.)='Αναζήτηση']
+${AI_SCHEMA_BUTTON}    xpath=//button[normalize-space(.)='Δοκιμή με AI Schema']
+${VIEW_LINK_FIRST}     xpath=(//a[normalize-space(.)='Προβολή'])[1]
+${DATE_FROM}           xpath=(//input[@placeholder='dd/MM/yyyy'])[1]
+${DATE_TO}             xpath=(//input[@placeholder='dd/MM/yyyy'])[2]
+${ROW_CHECKBOX_FIRST}  xpath=(//button[@data-slot='checkbox' and @aria-label='Select row'])[1]
+
+# Document view (Εικόνα Παραστατικού) toolbar
+${VIEW_PORTAL_LINK}    xpath=//a[contains(@href,'einvoice-demo-portal')]
+${VIEW_MYDATA_LINK}    xpath=//a[contains(@href,'mydata')]
+${VIEW_XML_LINK}       xpath=//a[contains(@href,'/xml/raw')]
+${VIEW_PRINT_BTN}      xpath=//button[.//*[contains(@class,'lucide-printer')]]
+${VIEW_ARCHIVE_BTN}    xpath=//button[.//*[contains(@class,'lucide-archive')]]
+# Ενέργειες Παραλαβής — μόνο Warehouse Manager (εικονίδιο package/box).
+# ΠΡΟΣΟΧΗ: αν αλλάξει το εικονίδιο στο UI, προσαρμόσε την κλάση εδώ.
+${RECEIPT_TRIGGER}     xpath=//button[@data-slot='dropdown-menu-trigger' and @aria-haspopup='menu'][.//*[contains(@class,'lucide-package')]]
+${RECEIPT_CONFIRM}     xpath=//*[@role='menuitem' and normalize-space(.)='Επιβεβαίωση Παραλαβής']
+${RECEIPT_PARTIAL}     xpath=//*[@role='menuitem' and normalize-space(.)='Επιβεβαίωση Μερικής Παραλαβής']
+${RECEIPT_REJECT}      xpath=//*[@role='menuitem' and contains(normalize-space(.),'Ολική Απόρριψη')]
+
+# Μενού Διαχείρισης (υπο-σύνδεσμοι)
+${MGMT_USERS}          xpath=//a[normalize-space(.)='Διαχείριση Χρηστών']
+${MGMT_COMPANY}        xpath=//a[normalize-space(.)='Διαχείριση Εταιρείας']
+${MGMT_PACKAGES}       xpath=//a[normalize-space(.)='Προαγορασμένα πακέτα']
+${MGMT_CUSTOM_FIELDS}  xpath=//a[normalize-space(.)='Προσαρμοσμένα Πεδία']
+${MGMT_API_KEYS}       xpath=//a[normalize-space(.)='Κλειδιά API']
+${MGMT_API_DOCS}       xpath=//a[normalize-space(.)='Τεκμηρίωση API']
+${HISTORY_SYNC}        xpath=//a[normalize-space(.)='Ιστορικό Συγχρονισμού']
+
+# Επιλογή εταιρείας (τρέχον UI)
+${CO_SELECT_URL}       ${BASE_URL}/company/select
+${CO_SEARCH_INPUT}     xpath=//input[contains(@placeholder,'Αναζήτηση εγκατάστασης')]
+${CO_ENTER_BTN_FIRST}  xpath=(//button[contains(@aria-label,'Είσοδος στην εταιρεία')])[1]
+
 *** Keywords ***
 # ======================================
 # ---------------- HELPERS -------------
@@ -75,8 +129,14 @@ Safe Wait Element
 
 Safe Input Text
     [Arguments]    ${locator}    ${text}    ${timeout}=10s
+    # Re-locate ΜΕΣΑ στο retry: σε SPA re-render το element γίνεται stale
+    # ανάμεσα στο wait και στο clear/input (StaleElementReferenceException).
+    Wait Until Keyword Succeeds    ${timeout}    500ms    Type Into Field    ${locator}    ${text}
 
-    Safe Wait Element    ${locator}    ${timeout}
+Type Into Field
+    [Arguments]    ${locator}    ${text}
+    Scroll To Center     ${locator}
+    Element Should Be Visible    ${locator}
     Clear Element Text   ${locator}
     Input Text           ${locator}    ${text}
 
@@ -86,12 +146,14 @@ Wait For Page Ready
 
 Expand Menu By Text
     [Arguments]    ${menu_name}
-
-    ${MENU}    Set Variable    xpath=//button[.//span[normalize-space(.)="${menu_name}"]]
+    # Τρέχον UI: το μενού είναι collapsible-trigger (όχι //button//span).
+    ${MENU}    Set Variable
+    ...    xpath=//button[@data-slot='collapsible-trigger' and normalize-space(.)='${menu_name}']
     Safe Wait Element    ${MENU}
     ${expanded}=    Get Element Attribute    ${MENU}    aria-expanded
-    Run Keyword If    '${expanded}' == 'false'
-    ...    Safe Click    ${MENU}
+    IF    '${expanded}' != 'true'
+        Safe Click    ${MENU}
+    END
 
 Click Menu Item By Name
     [Arguments]    ${item_name}
@@ -141,43 +203,36 @@ Valid Login Test
     [Arguments]    ${username}    ${password}
     Test Login    ${username}    ${password}
     Wait For Page Ready
-    Wait Until Location Is    ${SUCCESS_LOGIN_URL}    30s
+    # Μετά τη μετάβαση σε ES1 Identity (OIDC SSO) το τελικό URL μετά το login
+    # περιλαμβάνει πρόσθετα query params (π.χ. redirectUrl/state) και δεν είναι
+    # πλέον ακριβώς το ${SUCCESS_LOGIN_URL}. Ελέγχουμε ότι προσγειωθήκαμε στη
+    # σελίδα επιλογής εταιρείας με substring match (ανθεκτικό σε query string).
+    Wait Until Location Contains    /company/select    30s
 
 # ======================================
 # ----------- COMPANY SELECT -----------
 # ======================================
 
 Select Company
+    [Documentation]    Μπαίνει στην εταιρεία με το δοσμένο ΑΦΜ. Τρέχον UI: οι εταιρείες
+    ...                ομαδοποιούνται ανά «εγκατάσταση» (ίσως χρειάζεται expand) και η
+    ...                είσοδος γίνεται με κουμπί «Είσοδος στην εταιρεία …».
     [Arguments]    ${companyTIN1}
-    Safe Input Text    ${SEARCH_INPUT}    ${companyTIN1}    timeout=25s
-    Safe Click    xpath=//button[.//span[normalize-space(.)="Επιλογή"]]
-
-    # Toast επιβεβαίωσης: εμφανίζεται στη νέα επιλογή, αλλά ΟΧΙ πάντα όταν
-    # η εταιρεία είναι ήδη επιλεγμένη από προηγούμενο run — γι' αυτό optional.
-    ${TOAST}=    Set Variable
-    ...    xpath=//li[@data-sonner-toast]//div[@data-title and contains(., 'επιλέχθηκε')]
-    ${got_toast}=    Run Keyword And Return Status
-    ...    Wait Until Element Is Visible    ${TOAST}    10s
-    IF    ${got_toast}
-        ${text}=    Get Text    ${TOAST}
-        Should Match Regexp    ${text}    (?s)Η εταιρεία.+επιλέχθηκε
-    ELSE
-        Log    Δεν εμφανίστηκε toast (πιθανόν ήδη επιλεγμένη εταιρεία).    WARN
+    Go To    ${CO_SELECT_URL}
+    Wait For Page Ready
+    Safe Input Text    ${CO_SEARCH_INPUT}    ${companyTIN1}    timeout=25s
+    # Κουμπί εισόδου της γραμμής που περιέχει το συγκεκριμένο ΑΦΜ (count()=1 ⇒ η γραμμή,
+    # όχι ο μεγάλος container με πολλά κουμπιά).
+    ${enter}=    Set Variable
+    ...    xpath=(//div[.//*[contains(normalize-space(.),'ΑΦΜ: ${companyTIN1}')]][count(.//button[contains(@aria-label,'Είσοδος στην εταιρεία')])=1]//button[contains(@aria-label,'Είσοδος στην εταιρεία')])[1]
+    ${vis}=    Run Keyword And Return Status    Wait Until Element Is Visible    ${enter}    6s
+    IF    not ${vis}
+        # Ομαδοποιημένη εγκατάσταση — expand και μετά είσοδος.
+        Safe Click    xpath=(//button[contains(@class,'basis-72')])[1]
+        Wait Until Element Is Visible    ${enter}    12s
     END
-
-    # Το auto-redirect δεν είναι πάντα άμεσο — αν δεν συμβεί, μεταβαίνουμε μόνοι.
-    ${redirected}=    Run Keyword And Return Status
-    ...    Wait Until Location Is    https://hotdoc.impact.gr/    15s
-    IF    not ${redirected}
-        Log    Δεν έγινε auto-redirect — μετάβαση χειροκίνητα στην αρχική.    WARN
-        Go To    ${urlHotdog}
-        Wait For Page Ready
-    END
-
-    # ΤΕΛΙΚΟ κριτήριο επιτυχίας: αρχική σελίδα με ενεργό sidebar
-    # (το μενού "Διαχείριση" υπάρχει μόνο με επιλεγμένη εταιρεία).
-    Wait Until Element Is Visible
-    ...    xpath=//button[.//span[normalize-space(.)="Διαχείριση"]]    20s
+    Safe Click    ${enter}
+    Wait Until Keyword Succeeds    4x    3s    Land On Company Home
 
 # ======================================
 # ----------- USER CONTROL -----------
@@ -226,26 +281,21 @@ Add Admin User
 # ======================================
 
 Change Company
-    [Documentation]    Αλλάζει την επιλεγμένη εταιρεία μέσω του sidebar dropdown
+    [Documentation]    Αλλάζει την επιλεγμένη εταιρεία μέσω της σελίδας «Επιλογή Εταιρείας»
+    ...                (τρέχον UI). Ψάχνει με το όνομα και μπαίνει με «Είσοδος στην εταιρεία …».
     [Arguments]    ${company_name}=${newCompanyName}
-
-    # 1. Άνοιγμα του dropdown επιλογής εταιρείας στο sidebar
-    Safe Click    xpath=//button[@data-slot='dropdown-menu-trigger' and @data-sidebar='menu-button']
-
-    # 2. Περιμένουμε το menu content να γίνει visible (κρίσιμο για stability)
-    Wait Until Element Is Visible
-    ...    xpath=//div[@data-slot='dropdown-menu-content' and @data-state='open']
-    ...    timeout=10s
-
-    # 3. Επιλογή της εταιρείας — ψάχνουμε ΜΟΝΟ τα text nodes του menuitem
-    #    ώστε να αγνοήσουμε το avatar div με τα αρχικά (π.χ. "LD", "ΠΑ")
-    Safe Click
-    ...    xpath=//div[@data-slot='dropdown-menu-content' and @data-state='open']//div[@role='menuitem' and normalize-space(text()[normalize-space()])='${company_name}']
-
-    # 4. Επαλήθευση toast μηνύματος
-    Wait Until Element Is Visible
-    ...    xpath=//li[@data-sonner-toast]//div[@data-title and contains(., 'Η εταιρεία ${company_name} επιλέχθηκε')]
-    ...    timeout=10s
+    Go To    ${CO_SELECT_URL}
+    Wait For Page Ready
+    Safe Input Text    ${CO_SEARCH_INPUT}    ${company_name}    timeout=25s
+    ${enter}=    Set Variable
+    ...    xpath=(//button[contains(@aria-label,'Είσοδος στην εταιρεία') and contains(@aria-label,'${company_name}')])[1]
+    ${vis}=    Run Keyword And Return Status    Wait Until Element Is Visible    ${enter}    6s
+    IF    not ${vis}
+        Safe Click    xpath=(//button[contains(@class,'basis-72')])[1]
+        Wait Until Element Is Visible    ${enter}    12s
+    END
+    Safe Click    ${enter}
+    Wait Until Keyword Succeeds    4x    3s    Land On Company Home
 
 Validate Company Changed
     [Documentation]    Επαληθεύει ότι η αλλαγή εταιρείας ολοκληρώθηκε σωστά
@@ -271,6 +321,139 @@ Validate Aade Username
     Should Be Equal As Strings    ${actual_value}    ${expected_value}
     ...    msg=Expected aadeUsername to be '${expected_value}' but found '${actual_value}'
 
+# ======================================
+# --- DocPilot: COMPANY SWITCH (current UI) ---
+# ======================================
+Ensure Submenu Open
+    [Documentation]    Ανοίγει ένα collapsible μενού ΜΟΝΟ αν το υπο-στοιχείο
+    ...                δεν είναι ήδη ορατό (αποφεύγει το toggle-close).
+    [Arguments]    ${trigger}    ${item}
+    ${vis}=    Run Keyword And Return Status    Element Should Be Visible    ${item}
+    IF    not ${vis}
+        Safe Click    ${trigger}
+        Wait Until Element Is Visible    ${item}    10s
+    END
+
+Enter Company
+    [Documentation]    Μπαίνει σε συγκεκριμένη εταιρεία. Οι εταιρείες είναι
+    ...                ομαδοποιημένες ανά «εγκατάσταση»: αν χρειαστεί, κάνει
+    ...                πρώτα expand την εγκατάσταση και μετά «Είσοδος».
+    ...                ${installation} = όνομα εγκατάστασης (π.χ. "Greg K")
+    ...                ${company} = μέρος του ονόματος εταιρείας στο κουμπί εισόδου.
+    [Arguments]    ${installation}    ${company}
+    Go To    ${CO_SELECT_URL}
+    Wait For Page Ready
+    ${enter}=    Set Variable
+    ...    xpath=//button[contains(@aria-label,'Είσοδος στην εταιρεία') and contains(@aria-label,'${company}')]
+    ${vis}=    Run Keyword And Return Status    Wait Until Element Is Visible    ${enter}    5s
+    IF    not ${vis}
+        Safe Click
+        ...    xpath=//button[contains(@class,'basis-72')][.//span[normalize-space(.)='${installation}']]
+        Wait Until Element Is Visible    ${enter}    12s
+    END
+    Safe Click    ${enter}
+    # Η αλλαγή εταιρείας μπορεί να μην έχει ολοκληρωθεί όταν κάνουμε Go To, οπότε
+    # το home φορτώνει χωρίς πλήρες sidebar. Κάνουμε retry το «μετάβαση + wait sidebar»
+    # (παράλληλα παρακάμπτει και τυχόν stale redirectUrl σε παραστατικό άλλης εταιρείας).
+    Wait Until Keyword Succeeds    4x    3s    Land On Company Home
+
+Land On Company Home
+    Go To    ${urlHotdog}
+    Wait Until Element Is Visible    ${NAV_DOCUMENTS}    15s
+    Wait For Page Ready
+
+# ======================================
+# --- DocPilot: DASHBOARD ---
+# ======================================
+Verify Dashboard Widgets
+    Go To    ${urlHotdog}
+    Wait For Page Ready
+    Wait Until Page Contains    Εισερχόμενα παραστατικά    15s
+    Page Should Contain    Εκδότες
+    Page Should Contain    Τύποι παραστατικών
+
+# ======================================
+# --- DocPilot: DOCUMENTS / FILTERS ---
+# ======================================
+Open Documents Page
+    Go To    ${DOCS_URL}
+    Wait For Page Ready
+    # Το κουμπί «Αναζήτηση» είναι disabled μέχρι να μπουν ημ/νίες — περιμένουμε
+    # το πεδίο ημερομηνίας (ορατό) αντί για το κουμπί.
+    Wait Until Element Is Visible    ${DATE_FROM}    20s
+
+Search Documents With Date Range
+    [Arguments]    ${from}=01/01/2024    ${to}=31/12/2026
+    Open Documents Page
+    Safe Input Text    ${DATE_FROM}    ${from}
+    Safe Input Text    ${DATE_TO}      ${to}
+    Safe Click    ${SEARCH_BUTTON}
+    Wait For Page Ready
+    Wait Until Element Is Visible    ${VIEW_LINK_FIRST}    20s
+
+Open First Delivery Note
+    [Documentation]    Φιλτράρει Δελτία Διακίνησης και ανοίγει το 1ο σε Προβολή.
+    Go To    ${DN_FILTER_URL}
+    Wait For Page Ready
+    # Η λίστα φορτώνει async — περιμένουμε να εμφανιστεί το «Προβολή» πριν το click.
+    Safe Wait Element    ${VIEW_LINK_FIRST}    25s
+    Safe Click    ${VIEW_LINK_FIRST}
+    Wait Until Location Contains    /invoices/incoming/    15s
+    Wait Until Page Contains    Εικόνα παραστατικού    20s
+
+Verify Document View Actions
+    [Documentation]    Read-only έλεγχος ότι υπάρχουν τα κουμπιά/σύνδεσμοι προβολής.
+    [Tags]    read-only
+    Wait Until Element Is Visible    ${VIEW_XML_LINK}    15s
+    Page Should Contain Element    ${VIEW_PORTAL_LINK}
+    Page Should Contain Element    ${VIEW_MYDATA_LINK}
+    Page Should Contain Element    ${VIEW_PRINT_BTN}
+    Page Should Contain Element    ${VIEW_ARCHIVE_BTN}
+
+# ======================================
+# --- DocPilot: ROLE-SPECIFIC CHECKS ---
+# ======================================
+Verify Receipt Actions Available
+    [Documentation]    WAREHOUSE MANAGER: ανοίγει το μενού ενεργειών παραλαβής σε
+    ...                Δελτίο Διακίνησης και επαληθεύει τις 3 επιλογές — ΧΩΡΙΣ να
+    ...                εκτελεί καμία (άνοιγμα μενού = μη-αναστρέψιμο, read-only).
+    [Tags]    read-only    warehouse-manager
+    Open First Delivery Note
+    Safe Wait Element    ${RECEIPT_TRIGGER}    15s
+    Safe Click    ${RECEIPT_TRIGGER}
+    Wait Until Element Is Visible    ${RECEIPT_CONFIRM}    10s
+    Page Should Contain Element    ${RECEIPT_PARTIAL}
+    Page Should Contain Element    ${RECEIPT_REJECT}
+    Press Keys    ${None}    ESCAPE
+
+Verify Receipt Actions Not Available
+    [Documentation]    Μη-WM ρόλος: το κουμπί ενεργειών παραλαβής ΔΕΝ υπάρχει.
+    Open First Delivery Note
+    Page Should Not Contain Element    ${RECEIPT_TRIGGER}
+
+Verify Technical Manager Menu
+    Ensure Submenu Open    ${MENU_MANAGEMENT}    ${MGMT_CUSTOM_FIELDS}
+    Page Should Contain Element    ${MGMT_API_KEYS}
+    Page Should Contain Element    ${MGMT_API_DOCS}
+
+Verify AI Schema Button Appears On Selection
+    Open Documents Page
+    Safe Click    ${ROW_CHECKBOX_FIRST}
+    Wait Until Element Is Visible    ${AI_SCHEMA_BUTTON}    10s
+
+Verify Administrator Menu
+    Ensure Submenu Open    ${MENU_MANAGEMENT}    ${MGMT_USERS}
+    Page Should Contain Element    ${MGMT_COMPANY}
+    Page Should Contain Element    ${MGMT_PACKAGES}
+    Ensure Submenu Open    ${MENU_HISTORY}    ${HISTORY_SYNC}
+
+Verify Simple User Menu
+    [Documentation]    Simple user: ΜΟΝΟ Αρχική + Παραστατικά (χωρίς Διαχείριση/Ιστορικό).
+    Page Should Contain Element    ${NAV_HOME}
+    Page Should Contain Element    ${NAV_DOCUMENTS}
+    Page Should Not Contain Element    ${MENU_MANAGEMENT}
+    Page Should Not Contain Element    ${MENU_HISTORY}
+
 *** Test Cases ***
 TC 01 - Login Success
     Valid Login Test    ${userEmail1}    ${pwd1}
@@ -285,3 +468,52 @@ TC 03 - Delete And Recreate Admin User
 TC 04 - Change Company
     Change Company    ${newCompanyName}
     Validate Company Changed    ${newCompanyName}    ${expectedAadeUser}
+
+# ======================================
+# --- DocPilot feature / role tests ---
+# (κάθε role-test μπαίνει πρώτα στη σωστή εταιρεία, ώστε να είναι ανεξάρτητο)
+# ======================================
+TC 05 - Dashboard Widgets
+    [Documentation]    Αρχική: εμφανίζονται τα widgets (Εισερχόμενα, Εκδότες, Τύποι).
+    [Tags]    smoke    dashboard
+    Enter Company    LMC Demo    LMC Demo
+    Verify Dashboard Widgets
+
+TC 06 - Documents Search With Date Range
+    [Documentation]    Παραστατικά: φίλτρο ημερομηνιών + Αναζήτηση φέρνει αποτελέσματα.
+    [Tags]    smoke    documents
+    Search Documents With Date Range    01/01/2024    31/12/2026
+
+TC 07 - Document View Actions (read-only)
+    [Documentation]    Προβολή παραστατικού: portal link, MyData QR, XML, Εκτύπωση, Αρχειοθέτηση.
+    [Tags]    documents    read-only
+    Open First Delivery Note
+    Verify Document View Actions
+
+TC 08 - Warehouse Manager Receipt Actions Present
+    [Documentation]    LMC Demo (έχει ρόλο Warehouse Manager): εμφανίζονται οι Ενέργειες Παραλαβής
+    ...                σε Δελτίο Διακίνησης. (Σημ.: η Παπάκι —ενώ θα έπρεπε WM— στο portal
+    ...                εμφανίζεται ως Administrator, οπότε το WM test γίνεται στη LMC.)
+    [Tags]    warehouse-manager    read-only
+    Enter Company    LMC Demo    LMC Demo
+    Verify Receipt Actions Available
+
+TC 09 - Technical Manager Items Visible
+    [Documentation]    VDM (Technical Manager): Προσαρμοσμένα Πεδία/Κλειδιά API/Τεκμηρίωση API + AI Schema.
+    [Tags]    technical-manager
+    Enter Company    VDM    VDM
+    Verify Technical Manager Menu
+    Verify AI Schema Button Appears On Selection
+
+TC 10 - Administrator Menu Visible & No Receipt Actions
+    [Documentation]    Greg K (Administrator): Διαχείριση Χρηστών/Εταιρείας/Πακέτα + Ιστορικό· ΧΩΡΙΣ ενέργειες παραλαβής.
+    [Tags]    administrator
+    Enter Company    Greg K    Greg K
+    Verify Administrator Menu
+    Verify Receipt Actions Not Available
+
+TC 11 - Simple User Sees Only Home And Documents
+    [Documentation]    PROSVASIS (Simple user, κάτω από εγκατάσταση Greg K): μόνο Αρχική + Παραστατικά.
+    [Tags]    simple-user
+    Enter Company    Greg K    PROSVASIS
+    Verify Simple User Menu
