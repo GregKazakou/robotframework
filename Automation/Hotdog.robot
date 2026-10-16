@@ -70,8 +70,10 @@ ${RECEIPT_PARTIAL}     xpath=//*[@role='menuitem' and normalize-space(.)='Επι
 ${RECEIPT_REJECT}      xpath=//*[@role='menuitem' and contains(normalize-space(.),'Ολική Απόρριψη')]
 
 # Μενού Διαχείρισης (υπο-σύνδεσμοι)
-${MGMT_USERS}          xpath=//a[normalize-space(.)='Διαχείριση Χρηστών']
-${MGMT_COMPANY}        xpath=//a[normalize-space(.)='Διαχείριση Εταιρείας']
+${MGMT_USERS}          xpath=//a[@href='/account/manage']
+# Τρέχον UI (Οκτ 2026): ο σύνδεσμος «Διαχείριση Εταιρείας» μετονομάστηκε σε
+# «Ρύθμιση» (ίδιο href /company/manage). Επιλογή με href για ανθεκτικότητα.
+${MGMT_COMPANY}        xpath=//a[@href='/company/manage']
 ${MGMT_PACKAGES}       xpath=//a[normalize-space(.)='Προαγορασμένα πακέτα']
 ${MGMT_CUSTOM_FIELDS}  xpath=//a[normalize-space(.)='Προσαρμοσμένα Πεδία']
 ${MGMT_API_KEYS}       xpath=//a[normalize-space(.)='Κλειδιά API']
@@ -80,7 +82,10 @@ ${HISTORY_SYNC}        xpath=//a[normalize-space(.)='Ιστορικό Συγχρ
 
 # Επιλογή εταιρείας (τρέχον UI)
 ${CO_SELECT_URL}       ${BASE_URL}/company/select
-${CO_SEARCH_INPUT}     xpath=//input[contains(@placeholder,'Αναζήτηση εγκατάστασης')]
+# Τρέχον UI (Οκτ 2026): το πεδίο αναζήτησης στο /company/select είναι
+# <input type="search" placeholder="Όνομα ή ΑΦΜ">. Παλιό placeholder
+# 'Αναζήτηση εγκατάστασης' δεν υπάρχει πλέον.
+${CO_SEARCH_INPUT}     xpath=//input[@type='search' and contains(@placeholder,'Όνομα ή ΑΦΜ')]
 ${CO_ENTER_BTN_FIRST}  xpath=(//button[contains(@aria-label,'Είσοδος στην εταιρεία')])[1]
 
 *** Keywords ***
@@ -220,17 +225,18 @@ Select Company
     [Arguments]    ${companyTIN1}
     Go To    ${CO_SELECT_URL}
     Wait For Page Ready
+    # Τρέχον UI (Οκτ 2026): 2 επίπεδα. ΑΡΙΣΤΕΡΑ λίστα «Εγκαταστάσεων»
+    # (<button class="…min-h-12…"> με κείμενο «<όνομα> <πλήθος>»), ΔΕΞΙΑ οι
+    # εταιρείες της επιλεγμένης εγκατάστασης (κάρτα με «ΑΦΜ: …» + κουμπί
+    # aria-label="Είσοδος στην εταιρεία <όνομα>").
+    # 1) Αναζήτηση με ΑΦΜ -> φιλτράρει τις εγκαταστάσεις αριστερά.
     Safe Input Text    ${CO_SEARCH_INPUT}    ${companyTIN1}    timeout=25s
-    # Κουμπί εισόδου της γραμμής που περιέχει το συγκεκριμένο ΑΦΜ (count()=1 ⇒ η γραμμή,
-    # όχι ο μεγάλος container με πολλά κουμπιά).
+    # 2) Κλικ στην (φιλτραρισμένη) εγκατάσταση αριστερά για να φορτώσουν οι εταιρείες της.
+    Safe Click    xpath=(//button[contains(@class,'min-h-12')])[1]
+    # 3) Κλικ «Είσοδος» στην κάρτα της εταιρείας που εμφανίζει το συγκεκριμένο ΑΦΜ.
     ${enter}=    Set Variable
-    ...    xpath=(//div[.//*[contains(normalize-space(.),'ΑΦΜ: ${companyTIN1}')]][count(.//button[contains(@aria-label,'Είσοδος στην εταιρεία')])=1]//button[contains(@aria-label,'Είσοδος στην εταιρεία')])[1]
-    ${vis}=    Run Keyword And Return Status    Wait Until Element Is Visible    ${enter}    6s
-    IF    not ${vis}
-        # Ομαδοποιημένη εγκατάσταση — expand και μετά είσοδος.
-        Safe Click    xpath=(//button[contains(@class,'basis-72')])[1]
-        Wait Until Element Is Visible    ${enter}    12s
-    END
+    ...    xpath=//li[.//*[contains(normalize-space(.),'${companyTIN1}')]]//button[contains(@aria-label,'Είσοδος στην εταιρεία')]
+    Wait Until Element Is Visible    ${enter}    12s
     Safe Click    ${enter}
     Wait Until Keyword Succeeds    4x    3s    Land On Company Home
 
@@ -286,14 +292,13 @@ Change Company
     [Arguments]    ${company_name}=${newCompanyName}
     Go To    ${CO_SELECT_URL}
     Wait For Page Ready
+    # Τρέχον UI (Οκτ 2026): αναζήτηση -> φιλτράρισμα εγκαταστάσεων αριστερά,
+    # κλικ στην εγκατάσταση, μετά «Είσοδος» στη συγκεκριμένη εταιρεία δεξιά.
     Safe Input Text    ${CO_SEARCH_INPUT}    ${company_name}    timeout=25s
+    Safe Click    xpath=(//button[contains(@class,'min-h-12')])[1]
     ${enter}=    Set Variable
-    ...    xpath=(//button[contains(@aria-label,'Είσοδος στην εταιρεία') and contains(@aria-label,'${company_name}')])[1]
-    ${vis}=    Run Keyword And Return Status    Wait Until Element Is Visible    ${enter}    6s
-    IF    not ${vis}
-        Safe Click    xpath=(//button[contains(@class,'basis-72')])[1]
-        Wait Until Element Is Visible    ${enter}    12s
-    END
+    ...    xpath=//button[contains(@aria-label,'Είσοδος στην εταιρεία') and contains(@aria-label,'${company_name}')]
+    Wait Until Element Is Visible    ${enter}    12s
     Safe Click    ${enter}
     Wait Until Keyword Succeeds    4x    3s    Land On Company Home
 
@@ -343,14 +348,13 @@ Enter Company
     [Arguments]    ${installation}    ${company}
     Go To    ${CO_SELECT_URL}
     Wait For Page Ready
+    # Τρέχον UI (Οκτ 2026): ΑΡΙΣΤΕΡΑ επιλέγουμε την εγκατάσταση με το όνομα
+    # (button class ~min-h-12, κείμενο «<όνομα> <πλήθος εταιρειών>»), ΔΕΞΙΑ
+    # φορτώνουν οι εταιρείες της και μπαίνουμε με «Είσοδος στην εταιρεία …».
+    Safe Click    xpath=//button[contains(@class,'min-h-12') and contains(normalize-space(.),'${installation}')]
     ${enter}=    Set Variable
     ...    xpath=//button[contains(@aria-label,'Είσοδος στην εταιρεία') and contains(@aria-label,'${company}')]
-    ${vis}=    Run Keyword And Return Status    Wait Until Element Is Visible    ${enter}    5s
-    IF    not ${vis}
-        Safe Click
-        ...    xpath=//button[contains(@class,'basis-72')][.//span[normalize-space(.)='${installation}']]
-        Wait Until Element Is Visible    ${enter}    12s
-    END
+    Wait Until Element Is Visible    ${enter}    12s
     Safe Click    ${enter}
     # Η αλλαγή εταιρείας μπορεί να μην έχει ολοκληρωθεί όταν κάνουμε Go To, οπότε
     # το home φορτώνει χωρίς πλήρες sidebar. Κάνουμε retry το «μετάβαση + wait sidebar»
