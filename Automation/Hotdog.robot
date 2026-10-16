@@ -381,6 +381,20 @@ Ensure Submenu Open
         Wait Until Element Is Visible    ${item}    10s
     END
 
+In Company Run
+    [Documentation]    Ανθεκτικό σε session-drop: μπαίνει στην εταιρεία και τρέχει
+    ...                ΑΜΕΣΩΣ τον έλεγχο. Η dev-SSO session πέφτει λίγα δευτερόλεπτα
+    ...                μετά το login, αλλά κάθε fresh «Enter Company» (full reload)
+    ...                ανανεώνει τη session. Οπότε κάνουμε retry ολόκληρο το
+    ...                «Enter + έλεγχος» ώστε κάθε προσπάθεια να έχει φρέσκια session.
+    [Arguments]    ${installation}    ${company}    @{verify_keyword}
+    Wait Until Keyword Succeeds    4x    2s    Enter Then Verify    ${installation}    ${company}    @{verify_keyword}
+
+Enter Then Verify
+    [Arguments]    ${installation}    ${company}    @{verify_keyword}
+    Enter Company    ${installation}    ${company}
+    Run Keywords    @{verify_keyword}
+
 Enter Company
     [Documentation]    Μπαίνει σε συγκεκριμένη εταιρεία. Οι εταιρείες είναι
     ...                ομαδοποιημένες ανά «εγκατάσταση»: αν χρειαστεί, κάνει
@@ -508,12 +522,16 @@ TC 02 - Select Company Success
     Select Company    ${companyTIN1}
 
 TC 03 - Delete And Recreate Admin User
-    Navigate To User Management
+    # Navigate (idempotent) με retry ώστε να έχει φρέσκια session· μετά delete+recreate
+    # αμέσως (δεν κάνουμε retry τις destructive ενέργειες).
+    Wait Until Keyword Succeeds    4x    2s    Navigate To User Management
     Delete User    ${newUserName}
     Add Admin User    ${newUserName}    ${newUserEmail}
+
 TC 04 - Change Company
-    Change Company    ${newCompanyName}
-    Validate Company Changed    ${newCompanyName}    ${expectedAadeUser}
+    Wait Until Keyword Succeeds    4x    2s    Run Keywords
+    ...    Change Company    ${newCompanyName}
+    ...    AND    Validate Company Changed    ${newCompanyName}    ${expectedAadeUser}
 
 # ======================================
 # --- DocPilot feature / role tests ---
@@ -522,44 +540,36 @@ TC 04 - Change Company
 TC 05 - Dashboard Widgets
     [Documentation]    Αρχική: εμφανίζονται τα widgets (Εισερχόμενα, Εκδότες, Τύποι).
     [Tags]    smoke    dashboard
-    Enter Company    LMC Demo    LMC Demo
-    Verify Dashboard Widgets
+    In Company Run    LMC Demo    LMC Demo    Verify Dashboard Widgets
 
 TC 06 - Documents Search With Date Range
     [Documentation]    Παραστατικά: φίλτρο ημερομηνιών + Αναζήτηση φέρνει αποτελέσματα.
     [Tags]    smoke    documents
-    Search Documents With Date Range    01/01/2024    31/12/2026
+    In Company Run    LMC Demo    LMC Demo    Search Documents With Date Range
 
 TC 07 - Document View Actions (read-only)
     [Documentation]    Προβολή παραστατικού: portal link, MyData QR, XML, Εκτύπωση, Αρχειοθέτηση.
     [Tags]    documents    read-only
-    Open First Delivery Note
-    Verify Document View Actions
+    In Company Run    LMC Demo    LMC Demo    Open First Delivery Note    AND    Verify Document View Actions
 
 TC 08 - Warehouse Manager Receipt Actions Present
     [Documentation]    LMC Demo (έχει ρόλο Warehouse Manager): εμφανίζονται οι Ενέργειες Παραλαβής
     ...                σε Δελτίο Διακίνησης. (Σημ.: η Παπάκι —ενώ θα έπρεπε WM— στο portal
     ...                εμφανίζεται ως Administrator, οπότε το WM test γίνεται στη LMC.)
     [Tags]    warehouse-manager    read-only
-    Enter Company    LMC Demo    LMC Demo
-    Verify Receipt Actions Available
+    In Company Run    LMC Demo    LMC Demo    Verify Receipt Actions Available
 
 TC 09 - Technical Manager Items Visible
     [Documentation]    VDM (Technical Manager): Προσαρμοσμένα Πεδία/Κλειδιά API/Τεκμηρίωση API + AI Schema.
     [Tags]    technical-manager
-    Enter Company    VDM    VDM
-    Verify Technical Manager Menu
-    Verify AI Schema Button Appears On Selection
+    In Company Run    VDM    VDM    Verify Technical Manager Menu    AND    Verify AI Schema Button Appears On Selection
 
 TC 10 - Administrator Menu Visible & No Receipt Actions
     [Documentation]    Greg K (Administrator): Διαχείριση Χρηστών/Εταιρείας/Πακέτα + Ιστορικό· ΧΩΡΙΣ ενέργειες παραλαβής.
     [Tags]    administrator
-    Enter Company    Greg K    Greg K
-    Verify Administrator Menu
-    Verify Receipt Actions Not Available
+    In Company Run    Greg K    Greg K    Verify Administrator Menu    AND    Verify Receipt Actions Not Available
 
 TC 11 - Simple User Sees Only Home And Documents
     [Documentation]    PROSVASIS (Simple user, κάτω από εγκατάσταση Greg K): μόνο Αρχική + Παραστατικά.
     [Tags]    simple-user
-    Enter Company    Greg K    PROSVASIS
-    Verify Simple User Menu
+    In Company Run    Greg K    PROSVASIS    Verify Simple User Menu
